@@ -3,7 +3,8 @@ const express = require('express');
 const { S3Client, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
 const app = express();
-const port = 3000;
+
+const port = process.env.PORT || 3000;
 
 const s3 = new S3Client({
   region: "auto",
