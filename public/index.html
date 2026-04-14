@@ -1,44 +1,517 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Galeria R2</title>
+  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <style>
-    body { font-family: Arial; text-align: center; }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-      padding: 20px;
-    }
-    img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 10px;
-    }
+    body { font-family: Inter, system-ui, sans-serif; background: #eef2ff; color: #0f172a; margin: 0; }
+    .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
+    .panel-card { border: none; border-radius: 1.25rem; box-shadow: 0 18px 45px rgba(15,23,42,.08); }
+    .card-img-container { min-height: 260px; background: #111827; overflow: hidden; }
+    .card-img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-card { border-radius: 1.5rem; overflow: hidden; }
+    .meta-item { background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
+    .image-modal .modal-dialog { max-width: 980px; }
+    .image-modal .modal-content { border-radius: 1.5rem; background: #0f172a; overflow: hidden; }
+    .image-modal .modal-body { padding: 0; }
+    .image-modal .modal-body img { width: 100%; max-height: calc(90vh - 110px); object-fit: contain; display: block; background: #000; }
+    .image-modal .modal-footer { background: rgba(15,23,42,.95); color: #f8fafc; }
+    .image-modal .btn-close { filter: invert(1); }
+    .empty-gallery { color: #64748b; }
+    .btn-rounded { border-radius: 999px; }
+    #auth-panel, #admin-actions { display: none; }
+    @media (max-width: 768px) { .card-img-container { min-height: 220px; } }
   </style>
 </head>
 <body>
+<header class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+  <div class="container px-3 py-2">
+    <a class="navbar-brand" href="#">📸 Galeria R2</a>
+    <div class="d-flex gap-2 ms-auto align-items-center">
+      <button id="home-btn" class="btn btn-outline-light btn-sm btn-rounded">Home</button>
+      <button id="new-image-btn" class="btn btn-primary btn-sm btn-rounded">Nova imagem</button>
+      <button id="login-open-btn" class="btn btn-outline-light btn-sm btn-rounded">Login</button>
+      <button id="logout-header-btn" class="btn btn-outline-light btn-sm btn-rounded" style="display:none;">Sair</button>
+    </div>
+  </div>
+</header>
+<main class="container py-4">
+  <div class="row g-4 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="card panel-card p-4 h-100">
+        <div>
+          <h2 class="fw-bold">Galeria de fotos</h2>
+          <p class="text-secondary mb-0">Explore imagens já salvas. Faça login para enviar novas fotos, ver metadados e remover imagens como admin.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div id="auth-panel" class="card panel-card p-4 h-100">
+        <div id="logged-out">
+          <h2 class="fw-bold mb-3">Entrar</h2>
+          <p class="text-secondary">Somente o usuário admin pode enviar e remover fotos. Outros usuários podem apenas visualizar.</p>
+          <form id="login-form" class="mt-4">
+            <input type="text" class="form-control" name="username" placeholder="Usuário" required />
+            <input type="password" class="form-control" name="password" placeholder="Senha" required />
+            <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100">Entrar</button>
+          </form>
+          <p id="auth-error" class="text-danger mt-2"></p>
+          <p class="text-secondary small mb-0">Usuários de exemplo: <strong>admin/admin123</strong> ou <strong>viewer/viewer123</strong>.</p>
+        </div>
 
-<h1>📸 Minhas Imagens</h1>
-<div class="gallery" id="gallery"></div>
+        <div id="logged-in" style="display:none;">
+          <p class="mb-3">Conectado como <strong><span id="current-user"></span></strong> (<span id="current-role"></span>).</p>
+          <button id="logout-btn" class="btn btn-outline-dark btn-rounded">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <div id="admin-actions" class="card panel-card p-4 mb-4">
+    <h2 class="fw-bold mb-3">Upload de imagem</h2>
+    <form id="upload-form" class="row g-3">
+      <div class="col-12">
+        <input type="file" class="form-control form-control-lg" name="photo" accept="image/*" required />
+      </div>
+      <div class="col-md-6">
+        <input id="photoDate" type="text" class="form-control" name="photoDate" placeholder="Data da foto" />
+      </div>
+      <div class="col-md-6">
+        <input type="text" class="form-control" name="location" placeholder="Local (ex: Praia de Copacabana)" />
+      </div>
+      <div class="col-12">
+        <input type="text" class="form-control" name="summary" placeholder="Resumo da imagem" />
+      </div>
+      <div class="col-12">
+        <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100">Enviar imagem</button>
+      </div>
+    </form>
+    <p class="text-secondary small mt-3 mb-0">Este painel aparece apenas para usuários admin.</p>
+  </div>
+
+  <div class="card panel-card p-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-column flex-md-row gap-3">
+      <div>
+        <h2 class="fw-bold mb-0">Galeria</h2>
+        <p class="text-secondary mb-0">Veja as fotos enviadas com metadados e preview.</p>
+      </div>
+      <div id="location-filter-buttons" class="btn-group flex-wrap"></div>
+    </div>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="gallery"></div>
+    <p class="empty-gallery text-center mt-4" id="empty-gallery" style="display:none;">Nenhuma imagem encontrada. Faça upload de uma nova foto ou verifique sua conexão.</p>
+  </div>
+</main>
+
+<div class="modal fade image-modal" id="imageModalBootstrap" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-white" id="imageModalLabel">Visualização da imagem</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-0">
+        <img id="modal-image" src="" alt="Imagem em tamanho real" />
+      </div>
+      <div class="modal-footer border-0 py-3">
+        <p class="mb-0 text-white small" id="modal-coords">Clique fora ou use o botão de fechar.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
-async function loadImages() {
-  const res = await fetch('/images');
-  const images = await res.json();
+let currentUser = null;
+let imagesCache = [];
+let currentLocationFilter = 'all';
+const authPanel = document.getElementById('auth-panel');
+const uploadPanel = document.getElementById('admin-actions');
+const loginOpenBtn = document.getElementById('login-open-btn');
+const logoutHeaderBtn = document.getElementById('logout-header-btn');
+const newImageBtn = document.getElementById('new-image-btn');
+const homeBtn = document.getElementById('home-btn');
+const locationFilterButtons = document.getElementById('location-filter-buttons');
+const photoDateInput = document.getElementById('photoDate');
 
-  const gallery = document.getElementById('gallery');
+async function refreshAuth() {
+  const res = await fetch('/auth-status');
+  const data = await res.json();
+  currentUser = data.user;
+  renderAuth();
+  await loadImages();
+}
 
-  images.forEach(img => {
-    const el = document.createElement('img');
-    el.src = img.url;
-    gallery.appendChild(el);
+function renderAuth() {
+  const loggedOut = document.getElementById('logged-out');
+  const loggedIn = document.getElementById('logged-in');
+  const adminActions = document.getElementById('admin-actions');
+  const currentUserEl = document.getElementById('current-user');
+  const currentRoleEl = document.getElementById('current-role');
+
+  if (currentUser) {
+    loggedOut.style.display = 'none';
+    loggedIn.style.display = 'block';
+    currentUserEl.textContent = currentUser.username;
+    currentRoleEl.textContent = currentUser.role;
+    adminActions.style.display = currentUser.role === 'admin' ? 'block' : 'none';
+    loginOpenBtn.style.display = 'none';
+    if (logoutHeaderBtn) logoutHeaderBtn.style.display = 'inline-flex';
+    if (authPanel) authPanel.style.display = 'none';
+  } else {
+    loggedOut.style.display = 'block';
+    loggedIn.style.display = 'none';
+    adminActions.style.display = 'none';
+    loginOpenBtn.style.display = 'inline-flex';
+    if (logoutHeaderBtn) logoutHeaderBtn.style.display = 'none';
+  }
+}
+
+function openLoginArea() {
+  if (authPanel) {
+    authPanel.style.display = 'block';
+    authPanel.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function closeLoginArea() {
+  if (authPanel) authPanel.style.display = 'none';
+}
+
+function openUploadArea() {
+  if (!currentUser) {
+    openLoginArea();
+    return;
+  }
+
+  if (currentUser.role !== 'admin') {
+    alert('Apenas admin pode enviar imagens.');
+    return;
+  }
+
+  if (uploadPanel) {
+    uploadPanel.style.display = 'block';
+    uploadPanel.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function goHome() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (uploadPanel) uploadPanel.style.display = 'none';
+  if (authPanel) authPanel.style.display = 'none';
+}
+
+function convertDMSToDD(dms, ref) {
+  if (!dms || dms.length !== 3) return null;
+  const [degrees, minutes, seconds] = dms;
+  let dd = degrees + minutes / 60 + seconds / 3600;
+  if (ref === 'S' || ref === 'W') dd = -dd;
+  return Number(dd.toFixed(6));
+}
+
+function formatExifDate(dateString) {
+  if (!dateString) return 'Data não disponível';
+  const normalized = dateString.replace(/^([0-9]{4}):([0-9]{2}):([0-9]{2})/, '$1-$2-$3');
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return 'Data não disponível';
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+async function extractImageMetadata(imageUrl) {
+  try {
+    const response = await fetch(imageUrl, { mode: 'cors' });
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.src = objectUrl;
+
+    await new Promise((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = reject;
+    });
+
+    const metadata = await new Promise((resolve) => {
+      EXIF.getData(img, function () {
+        resolve(EXIF.getAllTags(this));
+      });
+    });
+
+    URL.revokeObjectURL(objectUrl);
+    return metadata;
+  } catch (error) {
+    return null;
+  }
+}
+
+function normalizeLocation(location) {
+  const clean = `${location || ''}`.trim();
+  return clean.length ? clean : 'Sem local';
+}
+
+function getFilteredImages() {
+  if (currentLocationFilter === 'all') {
+    return imagesCache;
+  }
+  return imagesCache.filter((img) => normalizeLocation(img.location) === currentLocationFilter);
+}
+
+function updateFilterButtons(images) {
+  if (!locationFilterButtons) return;
+
+  const uniqueLocations = [...new Set(images.map((img) => normalizeLocation(img.location)))].sort();
+  locationFilterButtons.innerHTML = '';
+
+  const allButton = document.createElement('button');
+  allButton.type = 'button';
+  allButton.className = `btn btn-sm ${currentLocationFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'} me-2 mb-2`;
+  allButton.textContent = 'Todos';
+  allButton.addEventListener('click', () => {
+    currentLocationFilter = 'all';
+    updateFilterButtons(images);
+    renderGallery(getFilteredImages());
+  });
+  locationFilterButtons.appendChild(allButton);
+
+  uniqueLocations.forEach((location) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `btn btn-sm ${currentLocationFilter === location ? 'btn-primary' : 'btn-outline-secondary'} me-2 mb-2`;
+    button.textContent = location;
+    button.addEventListener('click', () => {
+      currentLocationFilter = location;
+      updateFilterButtons(images);
+      renderGallery(getFilteredImages());
+    });
+    locationFilterButtons.appendChild(button);
   });
 }
 
-loadImages();
-</script>
+async function loadImages() {
+  const res = await fetch('/images');
+  const images = await res.json();
+  imagesCache = images;
+  updateFilterButtons(imagesCache);
+  renderGallery(getFilteredImages());
+}
 
+function renderGallery(images) {
+  const gallery = document.getElementById('gallery');
+  const emptyGallery = document.getElementById('empty-gallery');
+  gallery.innerHTML = '';
+  emptyGallery.style.display = 'none';
+
+  if (!images || !images.length) {
+    emptyGallery.style.display = 'block';
+    return;
+  }
+
+  images.forEach(async (img, index) => {
+    const safeId = `image-${index}`;
+    const column = document.createElement('div');
+    column.className = 'col';
+
+    const post = document.createElement('article');
+    post.className = 'card h-100 gallery-card';
+
+    const header = document.createElement('div');
+    header.className = 'd-flex align-items-center gap-3 px-3 pt-3';
+    header.innerHTML = `
+      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px; height:36px;">R</div>
+      <div>
+        <strong class="d-block">R2 Galeria</strong>
+        <small class="text-muted">Imagens com metadados de localização</small>
+      </div>
+    `;
+    post.appendChild(header);
+
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = 'card-img-container';
+    const image = document.createElement('img');
+    image.src = img.url;
+    image.alt = img.key;
+    imageWrapper.appendChild(image);
+    post.appendChild(imageWrapper);
+
+    const info = document.createElement('div');
+    info.className = 'card-body d-flex flex-column';
+    info.innerHTML = `
+      <h3 class="h5 mb-2">${img.key}</h3>
+      <p class="text-secondary mb-3">${img.summary || 'Sem descrição'}</p>
+      <div class="row g-2 mb-3">
+        <div class="col-12 meta-item">Local: ${img.location || 'não informado'}</div>
+        <div class="col-12 meta-item" id="date-${safeId}">Data: carregando...</div>
+        <div class="col-12 meta-item" id="coords-${safeId}">Coordenadas: carregando...</div>
+      </div>
+    `;
+    post.appendChild(info);
+
+    const footer = document.createElement('div');
+    footer.className = 'card-footer bg-transparent border-0 pt-0 pb-4 px-3';
+
+    const viewButton = document.createElement('button');
+    viewButton.className = 'btn btn-primary btn-sm me-2';
+    viewButton.textContent = 'Exibir';
+    viewButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openModal(img.url, img.key);
+    });
+    footer.appendChild(viewButton);
+
+    if (currentUser && currentUser.role === 'admin') {
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'btn btn-outline-danger btn-sm';
+      deleteButton.textContent = 'Excluir';
+      deleteButton.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const confirmation = confirm('Deseja realmente excluir esta imagem?');
+        if (!confirmation) return;
+
+        await fetch(`/images?key=${encodeURIComponent(img.key)}`, {
+          method: 'DELETE',
+        });
+
+        loadImages();
+      });
+      footer.appendChild(deleteButton);
+    }
+
+    post.appendChild(footer);
+    column.appendChild(post);
+    gallery.appendChild(column);
+
+    const meta = await extractImageMetadata(img.url);
+    const dateEl = document.getElementById(`date-${safeId}`);
+    const coordsEl = document.getElementById(`coords-${safeId}`);
+
+    let dateValue = 'não disponível';
+    if (img.photoDate) {
+      dateValue = formatExifDate(img.photoDate);
+    } else if (meta) {
+      const exifDate = meta.DateTimeOriginal || meta.DateTime || meta.DateTimeDigitized;
+      if (exifDate) dateValue = formatExifDate(exifDate);
+    }
+
+    if (dateEl) dateEl.textContent = `Data: ${dateValue}`;
+
+    if (meta) {
+      const latitude = convertDMSToDD(meta.GPSLatitude, meta.GPSLatitudeRef);
+      const longitude = convertDMSToDD(meta.GPSLongitude, meta.GPSLongitudeRef);
+      const coordsValue = latitude && longitude ? `${latitude}, ${longitude}` : 'N/A';
+      if (coordsEl) coordsEl.textContent = `Coordenadas: ${coordsValue}`;
+    } else {
+      if (coordsEl) coordsEl.textContent = 'Coordenadas: não disponíveis';
+    }
+  });
+}
+
+const imageModalElement = document.getElementById('imageModalBootstrap');
+const imageModalInstance = new bootstrap.Modal(imageModalElement);
+
+function openModal(imageUrl, title) {
+  const modalImage = document.getElementById('modal-image');
+  const modalLabel = document.getElementById('imageModalLabel');
+  modalImage.src = imageUrl;
+  modalImage.alt = title;
+  modalLabel.textContent = title;
+  imageModalInstance.show();
+}
+
+function closeModal() {
+  imageModalInstance.hide();
+}
+
+imageModalElement.addEventListener('hidden.bs.modal', () => {
+  const modalImage = document.getElementById('modal-image');
+  modalImage.src = '';
+});
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  const username = formData.get('username');
+  const password = formData.get('password');
+
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+
+  const data = await res.json();
+  const errorEl = document.getElementById('auth-error');
+
+  if (!res.ok) {
+    errorEl.textContent = data.error || 'Erro no login';
+    return;
+  }
+
+  errorEl.textContent = '';
+  currentUser = data.user;
+  renderAuth();
+  loadImages();
+}
+
+async function handleLogout() {
+  await fetch('/logout', { method: 'POST' });
+  currentUser = null;
+  renderAuth();
+  await loadImages();
+}
+
+async function handleUpload(event) {
+  event.preventDefault();
+  const form = event.target;
+  const fileInput = form.querySelector('input[name="photo"]');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('photo', file);
+  formData.append('summary', form.querySelector('input[name="summary"]').value || '');
+  formData.append('location', form.querySelector('input[name="location"]').value || '');
+  formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
+
+  const res = await fetch('/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (res.ok) {
+    fileInput.value = '';
+    loadImages();
+  } else {
+    alert('Erro ao enviar a imagem. Verifique se você está logado como admin.');
+  }
+}
+
+document.getElementById('login-form').addEventListener('submit', handleLogin);
+document.getElementById('logout-btn').addEventListener('click', handleLogout);
+document.getElementById('logout-header-btn').addEventListener('click', handleLogout);
+document.getElementById('upload-form').addEventListener('submit', handleUpload);
+document.getElementById('login-open-btn').addEventListener('click', openLoginArea);
+document.getElementById('new-image-btn').addEventListener('click', openUploadArea);
+document.getElementById('home-btn').addEventListener('click', goHome);
+
+if (photoDateInput) {
+  flatpickr(photoDateInput, {
+    dateFormat: 'Y-m-d',
+    altInput: true,
+    altFormat: 'd/m/Y',
+    allowInput: true,
+    disableMobile: true,
+  });
+}
+
+refreshAuth();
+</script>
 </body>
 </html>
