@@ -335,6 +335,7 @@ h3 {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 <script>
 let currentUser = null;
 let imagesCache = [];
@@ -488,39 +489,43 @@ async function handleRegister(event) {
 // ─── Upload ───────────────────────────────────────────────────────────────────
 async function handleUpload(event) {
   event.preventDefault();
-  const form      = event.target;
- const fileInput = document.getElementById('file-input');
+
+  const form = event.target;
+  const fileInput = form.querySelector('input[name="photo"]');
+
   if (!fileInput.files[0]) return;
 
-  const formData = new FormData();
-  formData.append('photo',     fileInput.files[0]);
-  formData.append('summary',   form.querySelector('input[name="summary"]').value || '');
-  formData.append('location',  form.querySelector('input[name="location"]').value || '');
-  formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
-
-  // Bloqueia a tela
   const overlay = document.getElementById('upload-overlay');
   overlay.classList.add('active');
 
   try {
-    const res = await fetch('/upload', { method: 'POST', body: formData });
+    const originalFile = fileInput.files[0];
+    const file = await convertHeicIfNeeded(originalFile);
+
+    const formData = new FormData();
+    formData.append('photo', file);
+    formData.append('summary', form.querySelector('input[name="summary"]').value || '');
+    formData.append('location', form.querySelector('input[name="location"]').value || '');
+    formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
+
+    const res = await fetch('/upload', {
+      method: 'POST',
+      body: formData
+    });
 
     if (res.ok) {
-      fileInput.value = '';
       form.reset();
       loadImages();
-      // Exibe toast de sucesso
-      const toastEl = document.getElementById('upload-toast');
-      const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4000 });
-      toast.show();
+      resetUploadArea();
     } else {
-      alert('Erro ao enviar a imagem. Verifique sua conexão e tente novamente.');
+      alert('Erro ao enviar imagem.');
     }
-  } catch {
-    alert('Erro de rede ao enviar a imagem.');
+
+  } catch (err) {
+    alert('Erro ao processar imagem HEIC.');
   } finally {
-    // Desbloqueia a tela sempre, mesmo em caso de erro
     overlay.classList.remove('active');
+    resetUploadArea();
   }
 }
 
@@ -823,8 +828,29 @@ removeBtn.addEventListener('click', (e) => {
 });
 
 
+function resetUploadArea() {
+  fileInput.value = '';
 
+  previewImage.src = '';
+  preview.style.display = 'none';
+  placeholder.style.display = 'block';
 
+  uploadArea.classList.remove('dragover');
+}
+async function convertHeicIfNeeded(file) {
+  if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+    const convertedBlob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9
+    });
+
+    return new File([convertedBlob], file.name.replace(/\.heic$/i, ".jpg"), {
+      type: "image/jpeg"
+    });
+  }
+  return file;
+}
 
 
 refreshAuth();
