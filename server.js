@@ -17,6 +17,19 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const port = process.env.PORT || 3000;
 
+
+
+// ─── ✅ ÍCONES APPLE (PWA iOS) ────────────────────────────────────────────────
+app.use(
+  "/icons",
+  express.static(path.join(__dirname, "public/icons"), {
+    setHeaders: (res) => {
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "public, max-age=0");
+    }
+  })
+);
+
 // ─── S3 / R2 ────────────────────────────────────────────────────────────────
 const s3 = new S3Client({
   region: 'auto',
