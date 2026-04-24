@@ -3,9 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d6efd">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Scrapbook">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+``
+
   <title>Galeria R2</title>
   <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <style>
     body { font-family: Inter, system-ui, sans-serif; background: #eef2ff; color: #0f172a; margin: 0; }
     .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
@@ -336,6 +346,12 @@ h3 {
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js");
+  }
+</script>
 <script>
 let currentUser = null;
 let imagesCache = [];
