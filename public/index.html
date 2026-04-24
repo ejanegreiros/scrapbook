@@ -11,6 +11,69 @@
     .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
     .panel-card { border: none; border-radius: 1.25rem; box-shadow: 0 18px 45px rgba(15,23,42,.08); }
     /* .card-img-container { height: 220px; background: #111827; overflow: hidden; flex-shrink: 0; } */
+
+.upload-area {
+  border: 2px dashed #cbd5f5;
+  border-radius: 1rem;
+  padding: 2rem;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.upload-area:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.upload-area.dragover {
+  border-color: #4f46e5;
+  background: #e0e7ff;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.upload-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.upload-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 0.75rem;
+  object-fit: contain;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+#remove-image {
+  border-radius: 999px;
+}
+
+
+.card-title-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-date {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.card-location {
+  font-size: 0.8rem;
+  color: #64748b;
+}
     .card-img-container {
   width: 100%;
   height: 220px;
@@ -19,14 +82,24 @@
   align-items: center;
   justify-content: center;
 }
-
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
 .card-img-container img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
     /* .card-img-container img { width: 100%; height: 100%; object-fit: cover; display: block; } */
-    .gallery-card { border-radius: 1.5rem; overflow: hidden; }
+    .gallery-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gallery-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+}
     .meta-item { background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
     .image-modal .modal-dialog { max-width: 980px; }
     .image-modal .modal-content { border-radius: 1.5rem; background: #0f172a; overflow: hidden; }
@@ -143,7 +216,20 @@
     <h2 class="fw-bold mb-3">Upload de imagem</h2>
     <form id="upload-form" class="row g-3">
       <div class="col-12">
-        <input type="file" class="form-control form-control-lg" name="photo" accept="image/*" required />
+        <div class="upload-area" id="upload-area">
+  <input type="file" id="file-input" name="photo" accept="image/*" hidden required />
+
+  <div class="upload-placeholder" id="upload-placeholder">
+    <div class="upload-icon">📁</div>
+    <p class="mb-1">Arraste sua imagem aqui</p>
+    <small class="text-muted">ou clique para selecionar</small>
+  </div>
+
+  <div class="upload-preview" id="upload-preview" style="display:none;">
+    <img id="preview-image" />
+    <button type="button" id="remove-image" class="btn btn-sm btn-danger">Remover</button>
+  </div>
+</div>
       </div>
       <div class="col-md-6">
         <input id="photoDate" type="text" class="form-control" name="photoDate" placeholder="Data da foto" />
@@ -403,7 +489,7 @@ async function handleRegister(event) {
 async function handleUpload(event) {
   event.preventDefault();
   const form      = event.target;
-  const fileInput = form.querySelector('input[name="photo"]');
+ const fileInput = document.getElementById('file-input');
   if (!fileInput.files[0]) return;
 
   const formData = new FormData();
@@ -495,10 +581,10 @@ async function renderGallery(images) {
     const header = document.createElement('div');
     header.className = 'd-flex align-items-center gap-3 px-3 pt-3';
     header.innerHTML = `
-      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px; height:36px;">R</div>
+      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px; height:36px;">S</div>
       <div>
-        <strong class="d-block">R2 Galeria</strong>
-        <small class="text-muted">Imagens com metadados de localização</small>
+        <strong class="d-block">ScrapBook</strong>
+        <small class="text-muted">Memória</small>
       </div>
     `;
     post.appendChild(header);
@@ -518,18 +604,27 @@ imageWrapper.appendChild(image);
 post.appendChild(imageWrapper);
 
     const info = document.createElement('div');
-    info.className = 'card-body d-flex flex-column';
-    info.innerHTML = `
-      <h3 class="h5 mb-2">${img.key}</h3>
-      <p class="text-secondary mb-3">${img.summary || 'Sem descrição'}</p>
-      <div class="row g-2 mb-3">
-        <div class="col-12 meta-item">Local: ${img.location || 'não informado'}</div>
-        <div class="col-12 meta-item" id="date-${safeId}">Data: carregando...</div>
-        <div class="col-12 meta-item" id="coords-${safeId}">Coordenadas: carregando...</div>
-        ${img.uploadedBy ? `<div class="col-12 meta-item text-muted small">Enviado por: ${img.uploadedBy}</div>` : ''}
-      </div>
-    `;
-    post.appendChild(info);
+info.className = 'card-body d-flex flex-column';
+
+info.innerHTML = `
+  <h3 class="h5 mb-2" id="title-${safeId}">
+    ${img.location || 'Local não informado'} 
+    <span class="text-muted">— carregando data...</span>
+  </h3>
+
+  <p class="text-secondary mb-3">
+    ${img.summary || 'Sem descrição'}
+  </p>
+
+  <div class="row g-2 mb-3">
+    <div class="col-12 meta-item" id="coords-${safeId}">
+      Coordenadas: carregando...
+    </div>
+    ${img.uploadedBy ? `<div class="col-12 meta-item text-muted small">Enviado por: ${img.uploadedBy}</div>` : ''}
+  </div>
+`;
+
+post.appendChild(info);
 
     const footer = document.createElement('div');
     footer.className = 'card-footer bg-transparent border-0 pt-0 pb-4 px-3';
@@ -561,8 +656,8 @@ post.appendChild(imageWrapper);
     gallery.appendChild(column);
 
     const meta    = await extractImageMetadata(img.url);
-    const dateEl  = document.getElementById(`date-${safeId}`);
-    const coordsEl = document.getElementById(`coords-${safeId}`);
+   const titleEl  = document.getElementById(`title-${safeId}`);
+const coordsEl = document.getElementById(`coords-${safeId}`);
 
     let dateValue = 'não disponível';
     if (img.photoDate) {
@@ -571,7 +666,16 @@ post.appendChild(imageWrapper);
       const exifDate = meta.DateTimeOriginal || meta.DateTime || meta.DateTimeDigitized;
       if (exifDate) dateValue = formatExifDate(exifDate);
     }
-    if (dateEl) dateEl.textContent = `Data: ${dateValue}`;
+
+    if (titleEl) {
+  const locationText = img.location || 'Local não informado';
+ titleEl.innerHTML = `
+  <div class="card-title-modern">
+    <span class="card-date">${dateValue}</span>
+    <span class="card-location">${locationText}</span>
+  </div>
+`;
+}
 
     if (meta) {
       const lat = convertDMSToDD(meta.GPSLatitude, meta.GPSLatitudeRef);
@@ -658,6 +762,70 @@ if (photoDateInput) {
     disableMobile: true,
   });
 }
+
+
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+const preview = document.getElementById('upload-preview');
+const placeholder = document.getElementById('upload-placeholder');
+const previewImage = document.getElementById('preview-image');
+const removeBtn = document.getElementById('remove-image');
+
+// Clique abre seletor
+uploadArea.addEventListener('click', () => fileInput.click());
+
+// Seleção manual
+fileInput.addEventListener('change', handleFile);
+
+// Drag over
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragover');
+});
+
+// Drag leave
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.classList.remove('dragover');
+});
+
+// Drop
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    fileInput.files = e.dataTransfer.files;
+    handleFile();
+  }
+});
+
+// Preview
+function handleFile() {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImage.src = e.target.result;
+    preview.style.display = 'flex';
+    placeholder.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remover imagem
+removeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  fileInput.value = '';
+  preview.style.display = 'none';
+  placeholder.style.display = 'block';
+});
+
+
+
+
+
 
 refreshAuth();
 </script>
