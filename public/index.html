@@ -5,118 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0d6efd">
   <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Scrapbook">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-``
-
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Scrapbook">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Scrapbook World Cruise</title>
   <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
   <link rel="manifest" href="/manifest.json">
- 
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Scrapbook World Cruise">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Scrapbook World Cruise">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
 
   <style>
     body { font-family: Inter, system-ui, sans-serif; background: #eef2ff; color: #0f172a; margin: 0; }
     .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
     .panel-card { border: none; border-radius: 1.25rem; box-shadow: 0 18px 45px rgba(15,23,42,.08); }
-    /* .card-img-container { height: 220px; background: #111827; overflow: hidden; flex-shrink: 0; } */
 
-.upload-area {
-  border: 2px dashed #cbd5f5;
-  border-radius: 1rem;
-  padding: 2rem;
-  text-align: center;
-  background: #f8fafc;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
+    .upload-area {
+      border: 2px dashed #cbd5f5;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      background: #f8fafc;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .upload-area:hover { border-color: #6366f1; background: #eef2ff; }
+    .upload-area.dragover { border-color: #4f46e5; background: #e0e7ff; }
+    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .upload-preview { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+    .upload-preview img { max-width: 100%; max-height: 200px; border-radius: 0.75rem; object-fit: contain; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+    #remove-image { border-radius: 999px; }
 
-.upload-area:hover {
-  border-color: #6366f1;
-  background: #eef2ff;
-}
+    .card-title-modern { display: flex; flex-direction: column; gap: 2px; }
+    .card-date { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
+    .card-location { font-size: 0.8rem; color: #64748b; }
 
-.upload-area.dragover {
-  border-color: #4f46e5;
-  background: #e0e7ff;
-}
+    .card-img-container { width: 100%; height: 220px; background: #000; display: flex; align-items: center; justify-content: center; }
+    h3 { font-weight: 600; letter-spacing: -0.3px; }
+    .card-img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-.upload-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
+    .gallery-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.12); }
 
-.upload-preview {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.upload-preview img {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 0.75rem;
-  object-fit: contain;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-}
-
-#remove-image {
-  border-radius: 999px;
-}
-
-
-.card-title-modern {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.card-date {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.card-location {
-  font-size: 0.8rem;
-  color: #64748b;
-}
-    .card-img-container {
-  width: 100%;
-  height: 220px;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-h3 {
-  font-weight: 600;
-  letter-spacing: -0.3px;
-}
-.card-img-container img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-    /* .card-img-container img { width: 100%; height: 100%; object-fit: cover; display: block; } */
-    .gallery-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.gallery-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
-}
     .meta-item { background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
     .image-modal .modal-dialog { max-width: 980px; }
     .image-modal .modal-content { border-radius: 1.5rem; background: #0f172a; overflow: hidden; }
@@ -129,31 +62,83 @@ h3 {
     #auth-panel, #admin-actions { display: none; }
     @media (max-width: 768px) { .card-img-container { height: 180px; } }
 
-    /* Overlay de upload */
+    /* Upload overlay */
     #upload-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,.65);
-      backdrop-filter: blur(3px);
-      z-index: 9999;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-      color: #fff;
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,.65); backdrop-filter: blur(3px);
+      z-index: 9999; flex-direction: column; align-items: center;
+      justify-content: center; gap: 1rem; color: #fff;
     }
     #upload-overlay.active { display: flex; }
     #upload-overlay .spinner-border { width: 3rem; height: 3rem; }
 
-    /* Toast de sucesso */
-    #upload-toast {
-      position: fixed;
-      bottom: 1.5rem;
-      right: 1.5rem;
-      z-index: 10000;
-      min-width: 280px;
+    /* Toast */
+    #upload-toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 10000; min-width: 280px; }
+
+    /* ── Comentários ──────────────────────────────────── */
+    .comments-section {
+      border-top: 1px solid #e2e8f0;
+      padding: 1rem 1rem 0.5rem;
+      background: #f8fafc;
     }
+    .comments-toggle {
+      background: none; border: none; padding: 0;
+      font-size: 0.85rem; font-weight: 600;
+      color: #6366f1; cursor: pointer;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .comments-toggle:hover { color: #4f46e5; }
+    .comments-list { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .comment-item {
+      background: #fff; border-radius: 0.75rem;
+      padding: 0.6rem 0.85rem; font-size: 0.82rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      position: relative;
+    }
+    .comment-author {
+      font-weight: 700; color: #0f172a; font-size: 0.8rem;
+    }
+    .comment-role-badge {
+      display: inline-block; font-size: 0.65rem; font-weight: 600;
+      border-radius: 999px; padding: 1px 7px; margin-left: 5px;
+      vertical-align: middle; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-admin    { background: #fef3c7; color: #92400e; }
+    .badge-viewer   { background: #dbeafe; color: #1e40af; }
+    .badge-commenter{ background: #f0fdf4; color: #166534; }
+    .badge-anonymous{ background: #f1f5f9; color: #475569; }
+
+    .comment-email  { font-size: 0.72rem; color: #94a3b8; }
+    .comment-text   { color: #334155; margin-top: 0.2rem; line-height: 1.4; }
+    .comment-time   { font-size: 0.7rem; color: #cbd5e1; margin-top: 0.25rem; }
+    .comment-delete-btn {
+      position: absolute; top: 0.4rem; right: 0.5rem;
+      background: none; border: none; color: #fca5a5;
+      font-size: 0.75rem; cursor: pointer; padding: 0 4px;
+      line-height: 1; display: none;
+    }
+    .comment-delete-btn:hover { color: #ef4444; }
+
+    .comment-form { margin-top: 0.75rem; }
+    .comment-form textarea {
+      border-radius: 0.75rem; border: 1.5px solid #e2e8f0;
+      font-size: 0.82rem; resize: none; padding: 0.5rem 0.75rem;
+      background: #fff; transition: border-color 0.15s;
+      width: 100%;
+    }
+    .comment-form textarea:focus { outline: none; border-color: #6366f1; }
+    .comment-form .anon-fields { display: none; gap: 0.4rem; margin-bottom: 0.4rem; }
+    .comment-form .anon-fields input {
+      border-radius: 0.75rem; border: 1.5px solid #e2e8f0;
+      font-size: 0.8rem; padding: 0.4rem 0.75rem; width: 100%;
+      background: #fff; transition: border-color 0.15s;
+    }
+    .comment-form .anon-fields input:focus { outline: none; border-color: #6366f1; }
+    .comment-submit {
+      margin-top: 0.4rem; border-radius: 999px;
+      font-size: 0.8rem; padding: 0.35rem 1.1rem;
+    }
+    .comments-hidden { display: none; }
   </style>
 </head>
 <body>
@@ -164,29 +149,17 @@ h3 {
       <button id="home-btn" class="btn btn-outline-light btn-sm btn-rounded">Home</button>
       <button id="new-image-btn" class="btn btn-primary btn-sm btn-rounded">Nova imagem</button>
 
-      <!-- Dropdown de autenticação -->
       <div class="dropdown">
-        <button
-          class="btn btn-outline-light btn-sm btn-rounded dropdown-toggle"
-          type="button"
-          id="auth-dropdown-btn"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
+        <button class="btn btn-outline-light btn-sm btn-rounded dropdown-toggle" type="button"
+          id="auth-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
           <span id="auth-dropdown-label">Login</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="auth-dropdown-btn">
-          <!-- Deslogado -->
-          <li id="dd-login-item">
-            <a class="dropdown-item" href="#" id="dd-login-link">🔐 Entrar</a>
-          </li>
-          <li id="dd-register-item">
-            <a class="dropdown-item" href="#" id="dd-register-link">➕ Cadastrar usuário</a>
-          </li>
-          <!-- Logado -->
-          <li id="dd-logout-item" style="display:none;">
-            <a class="dropdown-item text-danger" href="#" id="dd-logout-link">🚪 Sair</a>
-          </li>
+          <li id="dd-login-item"><a class="dropdown-item" href="#" id="dd-login-link">🔐 Entrar</a></li>
+          <!-- PRODUÇÃO: descomente para reativar cadastro público
+          <li id="dd-register-item"><a class="dropdown-item" href="#" id="dd-register-link">➕ Cadastrar usuário</a></li>
+          -->
+          <li id="dd-logout-item" style="display:none;"><a class="dropdown-item text-danger" href="#" id="dd-logout-link">🚪 Sair</a></li>
         </ul>
       </div>
     </div>
@@ -205,21 +178,19 @@ h3 {
     </div>
     <div class="col-12 col-lg-5">
       <div id="auth-panel" class="card panel-card p-4 h-100">
-
-        <!-- Formulário de login -->
         <div id="logged-out">
           <h2 class="fw-bold mb-3">Entrar</h2>
-          <p class="text-secondary">Faça login para enviar e ver suas fotos. Cada usuário gerencia apenas suas próprias imagens.</p>
+          <p class="text-secondary">Faça login para enviar e ver suas fotos.</p>
           <form id="login-form" class="mt-4 d-flex flex-column gap-2">
             <input type="text" class="form-control" name="username" placeholder="Usuário" required />
             <input type="password" class="form-control" name="password" placeholder="Senha" required />
             <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100">Entrar</button>
           </form>
           <p id="auth-error" class="text-danger mt-2 mb-1"></p>
+          <!-- PRODUÇÃO: descomente para reativar cadastro público
           <a href="#" id="open-register-from-login" class="small">Cadastrar novo usuário</a>
+          -->
         </div>
-
-        <!-- Estado logado -->
         <div id="logged-in" style="display:none;">
           <p class="mb-3">Conectado como <strong><span id="current-user"></span></strong> (<span id="current-role"></span>).</p>
           <button id="logout-btn" class="btn btn-outline-dark btn-rounded">Sair</button>
@@ -228,25 +199,23 @@ h3 {
     </div>
   </div>
 
-  <!-- Painel de upload (admin) -->
+  <!-- Upload panel -->
   <div id="admin-actions" class="card panel-card p-4 mb-4">
     <h2 class="fw-bold mb-3">Upload de imagem</h2>
     <form id="upload-form" class="row g-3">
       <div class="col-12">
         <div class="upload-area" id="upload-area">
-  <input type="file" id="file-input" name="photo" accept="image/*" hidden required />
-
-  <div class="upload-placeholder" id="upload-placeholder">
-    <div class="upload-icon">📁</div>
-    <p class="mb-1">Arraste sua imagem aqui</p>
-    <small class="text-muted">ou clique para selecionar</small>
-  </div>
-
-  <div class="upload-preview" id="upload-preview" style="display:none;">
-    <img id="preview-image" />
-    <button type="button" id="remove-image" class="btn btn-sm btn-danger">Remover</button>
-  </div>
-</div>
+          <input type="file" id="file-input" name="photo" accept="image/*" hidden required />
+          <div class="upload-placeholder" id="upload-placeholder">
+            <div class="upload-icon">📁</div>
+            <p class="mb-1">Arraste sua imagem aqui</p>
+            <small class="text-muted">ou clique para selecionar</small>
+          </div>
+          <div class="upload-preview" id="upload-preview" style="display:none;">
+            <img id="preview-image" />
+            <button type="button" id="remove-image" class="btn btn-sm btn-danger">Remover</button>
+          </div>
+        </div>
       </div>
       <div class="col-md-6">
         <input id="photoDate" type="text" class="form-control" name="photoDate" placeholder="Data da foto" />
@@ -261,10 +230,9 @@ h3 {
         <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100">Enviar imagem</button>
       </div>
     </form>
-    <p class="text-secondary small mt-3 mb-0">Este painel aparece para qualquer usuário logado.</p>
   </div>
 
-  <!-- Galeria -->
+  <!-- Gallery -->
   <div class="card panel-card p-4">
     <div class="d-flex align-items-center justify-content-between mb-3 flex-column flex-md-row gap-3">
       <div>
@@ -274,27 +242,25 @@ h3 {
       <div id="location-filter-buttons" class="btn-group flex-wrap"></div>
     </div>
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="gallery"></div>
-    <p class="empty-gallery text-center mt-4" id="empty-gallery" style="display:none;">Nenhuma imagem encontrada. Faça upload de uma nova foto ou verifique sua conexão.</p>
+    <p class="empty-gallery text-center mt-4" id="empty-gallery" style="display:none;">Nenhuma imagem encontrada.</p>
   </div>
 </main>
 
-<!-- Overlay de carregamento do upload -->
+<!-- Upload overlay -->
 <div id="upload-overlay">
   <div class="spinner-border text-light" role="status"></div>
   <p class="mb-0 fw-semibold fs-5">Enviando imagem…</p>
 </div>
 
-<!-- Toast de sucesso -->
+<!-- Toast -->
 <div id="upload-toast" class="toast align-items-center text-bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
   <div class="d-flex">
-    <div class="toast-body fs-6">
-      ✅ Imagem enviada com sucesso!
-    </div>
+    <div class="toast-body fs-6">✅ Imagem enviada com sucesso!</div>
     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
   </div>
 </div>
 
-<!-- Modal: visualização de imagem -->
+<!-- Modal: image view -->
 <div class="modal fade image-modal" id="imageModalBootstrap" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content">
@@ -312,7 +278,7 @@ h3 {
   </div>
 </div>
 
-<!-- Modal: cadastro de usuário -->
+<!-- PRODUÇÃO: descomente para reativar cadastro público
 <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0" style="border-radius:1.5rem; overflow:hidden;">
@@ -322,8 +288,7 @@ h3 {
       </div>
       <div class="modal-body p-4">
         <p class="text-secondary small mb-3">
-          Somente administradores podem criar novos usuários.<br/>
-          Se ainda não existe nenhum usuário no sistema, o primeiro cadastro é livre.
+          Qualquer pessoa pode cadastrar um novo usuário.
         </p>
         <form id="register-form" class="d-flex flex-column gap-3">
           <div>
@@ -337,8 +302,9 @@ h3 {
           <div>
             <label class="form-label fw-semibold">Perfil</label>
             <select class="form-select" name="role">
-              <option value="viewer" selected>Viewer — apenas visualiza</option>
-              <option value="admin">Admin — pode enviar e remover</option>
+              <option value="viewer" selected>Viewer — visualiza e comenta (sem e-mail)</option>
+              <option value="commenter">Commenter — visualiza e comenta (com nome e e-mail)</option>
+              <option value="admin">Admin — acesso total</option>
             </select>
           </div>
           <p id="register-error" class="text-danger mb-0" style="min-height:1.2em;"></p>
@@ -348,6 +314,7 @@ h3 {
     </div>
   </div>
 </div>
+-->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -359,25 +326,24 @@ h3 {
     navigator.serviceWorker.register("/service-worker.js");
   }
 </script>
+
 <script>
 let currentUser = null;
 let imagesCache = [];
 let currentLocationFilter = 'all';
 
-const authPanel       = document.getElementById('auth-panel');
-const uploadPanel     = document.getElementById('admin-actions');
-const newImageBtn     = document.getElementById('new-image-btn');
-const homeBtn         = document.getElementById('home-btn');
+const authPanel             = document.getElementById('auth-panel');
+const uploadPanel           = document.getElementById('admin-actions');
 const locationFilterButtons = document.getElementById('location-filter-buttons');
-const photoDateInput  = document.getElementById('photoDate');
+const photoDateInput        = document.getElementById('photoDate');
 
-// ─── Bootstrap modals ────────────────────────────────────────────────────────
 const imageModalEl   = document.getElementById('imageModalBootstrap');
 const imageModal     = new bootstrap.Modal(imageModalEl);
-const registerModalEl = document.getElementById('registerModal');
-const registerModal  = new bootstrap.Modal(registerModalEl);
+// PRODUÇÃO: descomente para reativar cadastro público
+// const registerModalEl = document.getElementById('registerModal');
+// const registerModal  = new bootstrap.Modal(registerModalEl);
 
-// ─── Auth rendering ──────────────────────────────────────────────────────────
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 async function refreshAuth() {
   const res  = await fetch('/auth-status');
   const data = await res.json();
@@ -393,7 +359,6 @@ function renderAuth() {
   const currentRoleEl = document.getElementById('current-role');
   const adminActions  = document.getElementById('admin-actions');
   const labelEl       = document.getElementById('auth-dropdown-label');
-
   const ddLoginItem    = document.getElementById('dd-login-item');
   const ddRegisterItem = document.getElementById('dd-register-item');
   const ddLogoutItem   = document.getElementById('dd-logout-item');
@@ -403,75 +368,69 @@ function renderAuth() {
     loggedIn.style.display    = 'block';
     currentUserEl.textContent = currentUser.username;
     currentRoleEl.textContent = currentUser.role;
-    adminActions.style.display = currentUser ? 'block' : 'none';
+
+    // viewer e commenter NÃO veem o painel de upload
+    const canUpload = currentUser.role === 'admin';
+    adminActions.style.display = canUpload ? 'block' : 'none';
+
+    // guest não vê o botão "Nova imagem"
+    const newImageBtn = document.getElementById('new-image-btn');
+    if (newImageBtn) newImageBtn.style.display = currentUser.username === 'guest' ? 'none' : '';
+
     if (authPanel) authPanel.style.display = 'none';
 
-    // Dropdown: mostrar apenas "Sair"
     labelEl.textContent        = currentUser.username;
     ddLoginItem.style.display    = 'none';
-    ddRegisterItem.style.display = 'none';
+    if (ddRegisterItem) ddRegisterItem.style.display = 'none';
     ddLogoutItem.style.display   = '';
   } else {
     loggedOut.style.display  = 'block';
     loggedIn.style.display   = 'none';
     adminActions.style.display = 'none';
 
-    // Dropdown: mostrar "Entrar" e "Cadastrar"
     labelEl.textContent        = 'Login';
     ddLoginItem.style.display    = '';
-    ddRegisterItem.style.display = '';
+    if (ddRegisterItem) ddRegisterItem.style.display = '';
     ddLogoutItem.style.display   = 'none';
+
+    // restaura botão "Nova imagem" ao deslogar
+    const newImageBtn = document.getElementById('new-image-btn');
+    if (newImageBtn) newImageBtn.style.display = '';
   }
 }
 
 function openLoginArea() {
-  if (authPanel) {
-    authPanel.style.display = 'block';
-    authPanel.scrollIntoView({ behavior: 'smooth' });
-  }
+  if (authPanel) { authPanel.style.display = 'block'; authPanel.scrollIntoView({ behavior: 'smooth' }); }
 }
-
 function openUploadArea() {
   if (!currentUser) { openLoginArea(); return; }
-  if (uploadPanel) {
-    uploadPanel.style.display = 'block';
-    uploadPanel.scrollIntoView({ behavior: 'smooth' });
-  }
+  if (uploadPanel) { uploadPanel.style.display = 'block'; uploadPanel.scrollIntoView({ behavior: 'smooth' }); }
 }
-
 function goHome() {
-  if (authPanel)  authPanel.style.display  = 'none';
+  if (authPanel) authPanel.style.display = 'none';
   if (uploadPanel && currentUser?.role !== 'admin') uploadPanel.style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ─── Login ────────────────────────────────────────────────────────────────────
+// ─── Login / Logout / Register ────────────────────────────────────────────────
 async function handleLogin(event) {
   event.preventDefault();
-  const form     = event.target;
+  const form = event.target;
   const formData = new FormData(form);
-
   const res  = await fetch('/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: formData.get('username'),
-      password: formData.get('password'),
-    }),
+    body: JSON.stringify({ username: formData.get('username'), password: formData.get('password') }),
   });
-
-  const data  = await res.json();
+  const data = await res.json();
   const errorEl = document.getElementById('auth-error');
-
   if (!res.ok) { errorEl.textContent = data.error || 'Erro no login'; return; }
-
   errorEl.textContent = '';
   currentUser = data.user;
   renderAuth();
   loadImages();
 }
 
-// ─── Logout ───────────────────────────────────────────────────────────────────
 async function handleLogout() {
   await fetch('/logout', { method: 'POST' });
   currentUser = null;
@@ -479,71 +438,43 @@ async function handleLogout() {
   await loadImages();
 }
 
-// ─── Cadastro ─────────────────────────────────────────────────────────────────
 async function handleRegister(event) {
   event.preventDefault();
-  const form     = event.target;
+  const form = event.target;
   const formData = new FormData(form);
-  const errorEl  = document.getElementById('register-error');
+  const errorEl = document.getElementById('register-error');
   errorEl.textContent = '';
-
   const res = await fetch('/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: formData.get('username'),
-      password: formData.get('password'),
-      role:     formData.get('role'),
-    }),
+    body: JSON.stringify({ username: formData.get('username'), password: formData.get('password'), role: formData.get('role') }),
   });
-
   const data = await res.json();
-
-  if (!res.ok) {
-    errorEl.textContent = data.error || 'Erro ao cadastrar';
-    return;
-  }
-
+  if (!res.ok) { errorEl.textContent = data.error || 'Erro ao cadastrar'; return; }
   form.reset();
-  registerModal.hide();
+  // registerModal.hide(); // PRODUÇÃO: descomente junto com o cadastro
   alert(`Usuário "${formData.get('username')}" cadastrado com sucesso!`);
 }
 
 // ─── Upload ───────────────────────────────────────────────────────────────────
 async function handleUpload(event) {
   event.preventDefault();
-
   const form = event.target;
   const fileInput = form.querySelector('input[name="photo"]');
-
   if (!fileInput.files[0]) return;
-
   const overlay = document.getElementById('upload-overlay');
   overlay.classList.add('active');
-
   try {
     const originalFile = fileInput.files[0];
     const file = await convertHeicIfNeeded(originalFile);
-
     const formData = new FormData();
     formData.append('photo', file);
     formData.append('summary', form.querySelector('input[name="summary"]').value || '');
     formData.append('location', form.querySelector('input[name="location"]').value || '');
     formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
-
-    const res = await fetch('/upload', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (res.ok) {
-      form.reset();
-      loadImages();
-      resetUploadArea();
-    } else {
-      alert('Erro ao enviar imagem.');
-    }
-
+    const res = await fetch('/upload', { method: 'POST', body: formData });
+    if (res.ok) { form.reset(); loadImages(); resetUploadArea(); }
+    else { alert('Erro ao enviar imagem.'); }
   } catch (err) {
     alert('Erro ao processar imagem HEIC.');
   } finally {
@@ -552,11 +483,11 @@ async function handleUpload(event) {
   }
 }
 
-// ─── Galeria ──────────────────────────────────────────────────────────────────
+// ─── Gallery ──────────────────────────────────────────────────────────────────
 async function loadImages() {
   try {
-    const res    = await fetch('/images');
-    imagesCache  = await res.json();
+    const res   = await fetch('/images');
+    imagesCache = await res.json();
     renderGallery(imagesCache);
     renderLocationFilter(imagesCache);
   } catch {
@@ -568,15 +499,12 @@ async function loadImages() {
 function renderLocationFilter(images) {
   const locations = [...new Set(images.map(i => i.location).filter(Boolean))];
   locationFilterButtons.innerHTML = '';
-
   if (locations.length === 0) return;
-
   const allBtn = document.createElement('button');
   allBtn.className = `btn btn-sm ${currentLocationFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'}`;
   allBtn.textContent = 'Todos';
   allBtn.addEventListener('click', () => { currentLocationFilter = 'all'; renderGallery(imagesCache); renderLocationFilter(imagesCache); });
   locationFilterButtons.appendChild(allBtn);
-
   locations.forEach(loc => {
     const btn = document.createElement('button');
     btn.className = `btn btn-sm ${currentLocationFilter === loc ? 'btn-primary' : 'btn-outline-secondary'}`;
@@ -590,11 +518,7 @@ async function renderGallery(images) {
   const gallery    = document.getElementById('gallery');
   const emptyState = document.getElementById('empty-gallery');
   gallery.innerHTML = '';
-
-  const filtered = currentLocationFilter === 'all'
-    ? images
-    : images.filter(i => i.location === currentLocationFilter);
-
+  const filtered = currentLocationFilter === 'all' ? images : images.filter(i => i.location === currentLocationFilter);
   if (filtered.length === 0) { emptyState.style.display = 'block'; return; }
   emptyState.style.display = 'none';
 
@@ -606,56 +530,41 @@ async function renderGallery(images) {
     const post = document.createElement('article');
     post.className = 'card h-100 gallery-card';
 
+    // Header
     const header = document.createElement('div');
     header.className = 'd-flex align-items-center gap-3 px-3 pt-3';
     header.innerHTML = `
-      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px; height:36px;">S</div>
-      <div>
-        <strong class="d-block">ScrapBook</strong>
-        <small class="text-muted">Memória</small>
-      </div>
+      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;">S</div>
+      <div><strong class="d-block">ScrapBook</strong><small class="text-muted">Memória</small></div>
     `;
     post.appendChild(header);
 
-const imageWrapper = document.createElement('div');
-imageWrapper.className = 'card-img-container';
+    // Image
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = 'card-img-container';
+    const image = document.createElement('img');
+    image.src = img.url; image.alt = img.key; image.loading = 'lazy';
+    imageWrapper.appendChild(image);
+    post.appendChild(imageWrapper);
 
-const image = document.createElement('img');
-image.src = img.url;
-image.alt = img.key;
-image.loading = 'lazy';
-
-// ✅ agora sim adiciona a imagem dentro do container
-imageWrapper.appendChild(image);
-
-// depois adiciona o container no card
-post.appendChild(imageWrapper);
-
+    // Info
     const info = document.createElement('div');
-info.className = 'card-body d-flex flex-column';
+    info.className = 'card-body d-flex flex-column';
+    info.innerHTML = `
+      <h3 class="h5 mb-2" id="title-${safeId}">
+        ${img.location || 'Local não informado'} <span class="text-muted">— carregando data...</span>
+      </h3>
+      <p class="text-secondary mb-3">${img.summary || 'Sem descrição'}</p>
+      <div class="row g-2 mb-3">
+        <div class="col-12 meta-item" id="coords-${safeId}">Coordenadas: carregando...</div>
+        ${img.uploadedBy ? `<div class="col-12 meta-item text-muted small">Enviado por: ${img.uploadedBy}</div>` : ''}
+      </div>
+    `;
+    post.appendChild(info);
 
-info.innerHTML = `
-  <h3 class="h5 mb-2" id="title-${safeId}">
-    ${img.location || 'Local não informado'} 
-    <span class="text-muted">— carregando data...</span>
-  </h3>
-
-  <p class="text-secondary mb-3">
-    ${img.summary || 'Sem descrição'}
-  </p>
-
-  <div class="row g-2 mb-3">
-    <div class="col-12 meta-item" id="coords-${safeId}">
-      Coordenadas: carregando...
-    </div>
-    ${img.uploadedBy ? `<div class="col-12 meta-item text-muted small">Enviado por: ${img.uploadedBy}</div>` : ''}
-  </div>
-`;
-
-post.appendChild(info);
-
+    // Footer: botões
     const footer = document.createElement('div');
-    footer.className = 'card-footer bg-transparent border-0 pt-0 pb-4 px-3';
+    footer.className = 'card-footer bg-transparent border-0 pt-0 pb-3 px-3';
 
     const viewButton = document.createElement('button');
     viewButton.className = 'btn btn-primary btn-sm me-2';
@@ -663,10 +572,9 @@ post.appendChild(info);
     viewButton.addEventListener('click', e => { e.stopPropagation(); openModal(img.url, img.key); });
     footer.appendChild(viewButton);
 
-    const isOwner = currentUser?.username === img.uploadedBy;
+    // Só admin pode excluir
     const isAdmin = currentUser?.role === 'admin';
-
-    if (isOwner || isAdmin) {
+    if (isAdmin) {
       const deleteButton = document.createElement('button');
       deleteButton.className = 'btn btn-outline-danger btn-sm';
       deleteButton.textContent = 'Excluir';
@@ -678,14 +586,19 @@ post.appendChild(info);
       });
       footer.appendChild(deleteButton);
     }
-
     post.appendChild(footer);
+
+    // ── Seção de comentários ──────────────────────────────────────────────────
+    const commentsSection = buildCommentsSection(img.key, safeId);
+    post.appendChild(commentsSection);
+
     column.appendChild(post);
     gallery.appendChild(column);
 
-    const meta    = await extractImageMetadata(img.url);
-   const titleEl  = document.getElementById(`title-${safeId}`);
-const coordsEl = document.getElementById(`coords-${safeId}`);
+    // EXIF async
+    const meta   = await extractImageMetadata(img.url);
+    const titleEl  = document.getElementById(`title-${safeId}`);
+    const coordsEl = document.getElementById(`coords-${safeId}`);
 
     let dateValue = 'não disponível';
     if (img.photoDate) {
@@ -696,14 +609,12 @@ const coordsEl = document.getElementById(`coords-${safeId}`);
     }
 
     if (titleEl) {
-  const locationText = img.location || 'Local não informado';
- titleEl.innerHTML = `
-  <div class="card-title-modern">
-    <span class="card-date">${dateValue}</span>
-    <span class="card-location">${locationText}</span>
-  </div>
-`;
-}
+      titleEl.innerHTML = `
+        <div class="card-title-modern">
+          <span class="card-date">${dateValue}</span>
+          <span class="card-location">${img.location || 'Local não informado'}</span>
+        </div>`;
+    }
 
     if (meta) {
       const lat = convertDMSToDD(meta.GPSLatitude, meta.GPSLatitudeRef);
@@ -715,48 +626,250 @@ const coordsEl = document.getElementById(`coords-${safeId}`);
   });
 }
 
-// ─── Modal de imagem ──────────────────────────────────────────────────────────
+// ─── Comments section builder ─────────────────────────────────────────────────
+function buildCommentsSection(imageKey, safeId) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'comments-section';
+
+  // Toggle button (shows count after load)
+  const toggle = document.createElement('button');
+  toggle.className = 'comments-toggle';
+  toggle.innerHTML = `<span>💬</span> <span id="comment-count-${safeId}">Comentários</span>`;
+  wrapper.appendChild(toggle);
+
+  // Collapsible container
+  const container = document.createElement('div');
+  container.className = 'comments-hidden';
+  container.id = `comments-container-${safeId}`;
+
+  // List
+  const list = document.createElement('div');
+  list.className = 'comments-list';
+  list.id = `comments-list-${safeId}`;
+  container.appendChild(list);
+
+  // Form (only for logged-in users)
+  if (currentUser) {
+    const form = buildCommentForm(imageKey, safeId);
+    container.appendChild(form);
+  }
+
+  wrapper.appendChild(container);
+
+  let loaded = false;
+  let open = false;
+
+  toggle.addEventListener('click', async () => {
+    open = !open;
+    container.classList.toggle('comments-hidden', !open);
+    if (open && !loaded) {
+      loaded = true;
+      await loadComments(imageKey, safeId);
+    }
+  });
+
+  return wrapper;
+}
+
+function buildCommentForm(imageKey, safeId) {
+  const form = document.createElement('div');
+  form.className = 'comment-form';
+
+  // commenter role: show name + email fields
+  // viewer/admin: just the textarea
+  const isCommenter = currentUser?.role === 'commenter';
+
+  if (isCommenter) {
+    const anonFields = document.createElement('div');
+    anonFields.className = 'anon-fields';
+    anonFields.style.display = 'flex';
+    anonFields.style.flexDirection = 'column';
+    anonFields.innerHTML = `
+      <input type="text"  id="comment-name-${safeId}"  placeholder="Seu nome *"  required />
+      <input type="email" id="comment-email-${safeId}" placeholder="Seu e-mail *" required />
+    `;
+    form.appendChild(anonFields);
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.rows = 2;
+  textarea.placeholder = 'Escreva seu comentário…';
+  textarea.id = `comment-text-${safeId}`;
+  form.appendChild(textarea);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'btn btn-primary btn-sm comment-submit';
+  submitBtn.textContent = 'Enviar';
+  form.appendChild(submitBtn);
+
+  submitBtn.addEventListener('click', async () => {
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    let name = null, email = null;
+    if (isCommenter) {
+      name  = document.getElementById(`comment-name-${safeId}`)?.value.trim();
+      email = document.getElementById(`comment-email-${safeId}`)?.value.trim();
+      if (!name || !email) { alert('Preencha seu nome e e-mail para comentar.'); return; }
+    }
+
+    const body = { imageKey, text };
+    if (name)  body.name  = name;
+    if (email) body.email = email;
+
+    const res = await fetch('/comments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      textarea.value = '';
+      await loadComments(imageKey, safeId);
+    } else {
+      const d = await res.json();
+      alert(d.error || 'Erro ao enviar comentário.');
+    }
+  });
+
+  return form;
+}
+
+async function loadComments(imageKey, safeId) {
+  const list     = document.getElementById(`comments-list-${safeId}`);
+  const countEl  = document.getElementById(`comment-count-${safeId}`);
+  if (!list) return;
+
+  list.innerHTML = '<small class="text-muted">Carregando…</small>';
+
+  try {
+    const res      = await fetch(`/comments?imageKey=${encodeURIComponent(imageKey)}`);
+    const comments = await res.json();
+
+    if (countEl) countEl.textContent = `${comments.length} comentário${comments.length !== 1 ? 's' : ''}`;
+
+    if (comments.length === 0) {
+      list.innerHTML = '<small class="text-muted">Nenhum comentário ainda.</small>';
+      return;
+    }
+
+    list.innerHTML = '';
+    comments.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'comment-item';
+
+      const roleBadgeClass = {
+        admin: 'badge-admin', viewer: 'badge-viewer',
+        commenter: 'badge-commenter', anonymous: 'badge-anonymous',
+      }[c.authorRole] || 'badge-anonymous';
+
+      const roleLabel = { admin: 'Admin', viewer: 'Viewer', commenter: 'Commenter', anonymous: 'Visitante' }[c.authorRole] || c.authorRole;
+
+      const date = new Date(c.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      item.innerHTML = `
+        <div class="comment-author">
+          ${escHtml(c.authorName)}
+          <span class="comment-role-badge ${roleBadgeClass}">${roleLabel}</span>
+        </div>
+        ${c.authorEmail ? `<div class="comment-email">${escHtml(c.authorEmail)}</div>` : ''}
+        <div class="comment-text">${escHtml(c.text)}</div>
+        <div class="comment-time">${date}</div>
+      `;
+
+      // Admin pode excluir qualquer comentário
+      if (currentUser?.role === 'admin') {
+        const delBtn = document.createElement('button');
+        delBtn.className = 'comment-delete-btn';
+        delBtn.style.display = 'block';
+        delBtn.textContent = '✕';
+        delBtn.title = 'Excluir comentário';
+        delBtn.addEventListener('click', async () => {
+          if (!confirm('Excluir este comentário?')) return;
+          await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
+          await loadComments(imageKey, safeId);
+        });
+        item.appendChild(delBtn);
+      }
+
+      list.appendChild(item);
+    });
+  } catch {
+    list.innerHTML = '<small class="text-danger">Erro ao carregar comentários.</small>';
+  }
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
 function openModal(imageUrl, title) {
   document.getElementById('modal-image').src = imageUrl;
   document.getElementById('modal-image').alt = title;
   document.getElementById('imageModalLabel').textContent = title;
   imageModal.show();
 }
-
-imageModalEl.addEventListener('hidden.bs.modal', () => {
-  document.getElementById('modal-image').src = '';
-});
+imageModalEl.addEventListener('hidden.bs.modal', () => { document.getElementById('modal-image').src = ''; });
 
 // ─── EXIF helpers ─────────────────────────────────────────────────────────────
 function extractImageMetadata(url) {
   return new Promise(resolve => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
-    img.onload = () => {
-      EXIF.getData(img, function () {
-        const allTags = EXIF.getAllTags(this);
-        resolve(Object.keys(allTags).length ? allTags : null);
-      });
-    };
+    img.onload = () => { EXIF.getData(img, function () { const t = EXIF.getAllTags(this); resolve(Object.keys(t).length ? t : null); }); };
     img.onerror = () => resolve(null);
     img.src = url;
   });
 }
-
 function convertDMSToDD(dms, ref) {
   if (!dms || dms.length < 3) return null;
   let dd = dms[0] + dms[1] / 60 + dms[2] / 3600;
   if (ref === 'S' || ref === 'W') dd = -dd;
   return dd.toFixed(6);
 }
-
 function formatExifDate(dateStr) {
   if (!dateStr) return 'não disponível';
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr;
-    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch { return dateStr; }
+  try { const d = new Date(dateStr); if (isNaN(d)) return dateStr; return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  catch { return dateStr; }
+}
+
+// ─── Upload area ──────────────────────────────────────────────────────────────
+const uploadArea    = document.getElementById('upload-area');
+const fileInput     = document.getElementById('file-input');
+const preview       = document.getElementById('upload-preview');
+const placeholder   = document.getElementById('upload-placeholder');
+const previewImage  = document.getElementById('preview-image');
+const removeBtn     = document.getElementById('remove-image');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', handleFile);
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault(); uploadArea.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) { fileInput.files = e.dataTransfer.files; handleFile(); }
+});
+function handleFile() {
+  const file = fileInput.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { previewImage.src = e.target.result; preview.style.display = 'flex'; placeholder.style.display = 'none'; };
+  reader.readAsDataURL(file);
+}
+removeBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.value = ''; preview.style.display = 'none'; placeholder.style.display = 'block'; });
+function resetUploadArea() {
+  fileInput.value = ''; previewImage.src = '';
+  preview.style.display = 'none'; placeholder.style.display = 'block';
+  uploadArea.classList.remove('dragover');
+}
+async function convertHeicIfNeeded(file) {
+  if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
+    const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+    return new File([convertedBlob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
+  }
+  return file;
 }
 
 // ─── Event listeners ──────────────────────────────────────────────────────────
@@ -764,117 +877,19 @@ document.getElementById('login-form').addEventListener('submit', handleLogin);
 document.getElementById('logout-btn').addEventListener('click', handleLogout);
 document.getElementById('dd-logout-link').addEventListener('click', e => { e.preventDefault(); handleLogout(); });
 document.getElementById('upload-form').addEventListener('submit', handleUpload);
-document.getElementById('register-form').addEventListener('submit', handleRegister);
-
+// PRODUÇÃO: descomente para reativar cadastro público
+// document.getElementById('register-form').addEventListener('submit', handleRegister);
 document.getElementById('new-image-btn').addEventListener('click', openUploadArea);
 document.getElementById('home-btn').addEventListener('click', goHome);
+document.getElementById('dd-login-link').addEventListener('click', e => { e.preventDefault(); openLoginArea(); });
+// PRODUÇÃO: descomente para reativar cadastro público
+// function openRegisterModal() { registerModal.show(); }
+// document.getElementById('dd-register-link').addEventListener('click', e => { e.preventDefault(); openRegisterModal(); });
+// document.getElementById('open-register-from-login').addEventListener('click', e => { e.preventDefault(); openRegisterModal(); });
 
-// Dropdown → Entrar: abre painel de login na página
-document.getElementById('dd-login-link').addEventListener('click', e => {
-  e.preventDefault();
-  openLoginArea();
-});
-
-// Dropdown → Cadastrar + link no painel: abre modal de cadastro
-function openRegisterModal() { registerModal.show(); }
-document.getElementById('dd-register-link').addEventListener('click', e => { e.preventDefault(); openRegisterModal(); });
-document.getElementById('open-register-from-login').addEventListener('click', e => { e.preventDefault(); openRegisterModal(); });
-
-// Flatpickr
 if (photoDateInput) {
-  flatpickr(photoDateInput, {
-    dateFormat: 'Y-m-d',
-    altInput: true,
-    altFormat: 'd/m/Y',
-    allowInput: true,
-    disableMobile: true,
-  });
+  flatpickr(photoDateInput, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: true, disableMobile: true });
 }
-
-
-const uploadArea = document.getElementById('upload-area');
-const fileInput = document.getElementById('file-input');
-const preview = document.getElementById('upload-preview');
-const placeholder = document.getElementById('upload-placeholder');
-const previewImage = document.getElementById('preview-image');
-const removeBtn = document.getElementById('remove-image');
-
-// Clique abre seletor
-uploadArea.addEventListener('click', () => fileInput.click());
-
-// Seleção manual
-fileInput.addEventListener('change', handleFile);
-
-// Drag over
-uploadArea.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  uploadArea.classList.add('dragover');
-});
-
-// Drag leave
-uploadArea.addEventListener('dragleave', () => {
-  uploadArea.classList.remove('dragover');
-});
-
-// Drop
-uploadArea.addEventListener('drop', (e) => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    fileInput.files = e.dataTransfer.files;
-    handleFile();
-  }
-});
-
-// Preview
-function handleFile() {
-  const file = fileInput.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewImage.src = e.target.result;
-    preview.style.display = 'flex';
-    placeholder.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-}
-
-// Remover imagem
-removeBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  fileInput.value = '';
-  preview.style.display = 'none';
-  placeholder.style.display = 'block';
-});
-
-
-function resetUploadArea() {
-  fileInput.value = '';
-
-  previewImage.src = '';
-  preview.style.display = 'none';
-  placeholder.style.display = 'block';
-
-  uploadArea.classList.remove('dragover');
-}
-async function convertHeicIfNeeded(file) {
-  if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
-    const convertedBlob = await heic2any({
-      blob: file,
-      toType: "image/jpeg",
-      quality: 0.9
-    });
-
-    return new File([convertedBlob], file.name.replace(/\.heic$/i, ".jpg"), {
-      type: "image/jpeg"
-    });
-  }
-  return file;
-}
-
 
 refreshAuth();
 </script>

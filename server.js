@@ -17,8 +17,6 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const port = process.env.PORT || 3000;
 
-
-
 // ─── ✅ ÍCONES APPLE (PWA iOS) ────────────────────────────────────────────────
 app.use(
   "/icons",
@@ -48,9 +46,11 @@ const mongoClient = new MongoClient(process.env.MONGO_URI || '');
 const dbName = process.env.MONGO_DB || 'r2_gallery';
 const collectionName = process.env.MONGO_COLLECTION || 'images';
 const usersCollectionName = 'users';
+const commentsCollectionName = 'comments';
 
 let imageCollection;
 let usersCollection;
+let commentsCollection;
 
 async function initMongo() {
   if (!process.env.MONGO_URI) {
@@ -67,6 +67,10 @@ async function initMongo() {
   usersCollection = db.collection(usersCollectionName);
   await usersCollection.createIndex({ username: 1 }, { unique: true });
 
+  commentsCollection = db.collection(commentsCollectionName);
+  await commentsCollection.createIndex({ imageKey: 1 });
+  await commentsCollection.createIndex({ createdAt: -1 });
+
   // Cria o admin padrão apenas se não existir nenhum usuário ainda
   const count = await usersCollection.countDocuments();
   if (count === 0) {
@@ -81,6 +85,19 @@ async function initMongo() {
       createdAt: new Date(),
     });
     console.log('Usuário admin padrão criado.');
+  }
+
+  // Garante que o usuário guest (commenter) sempre existe
+  const guestExists = await usersCollection.findOne({ username: 'guest' });
+  if (!guestExists) {
+    const guestPassword = await bcrypt.hash('magnifica', 12);
+    await usersCollection.insertOne({
+      username: 'guest',
+      password: guestPassword,
+      role: 'commenter',
+      createdAt: new Date(),
+    });
+    console.log('Usuário guest criado.');
   }
 
   console.log('MongoDB conectado em', dbName);
@@ -108,6 +125,17 @@ function ensureSignedIn(req, res, next) {
 function ensureAdmin(req, res, next) {
   if (req.session.user?.role === 'admin') return next();
   return res.status(403).json({ error: 'Acesso negado' });
+}
+
+// viewer e commenter podem comentar; commenter também pode comentar sem login (nome+email obrigatório)
+function ensureCanComment(req, res, next) {
+  const role = req.session.user?.role;
+  // Usuários logados com qualquer role podem comentar
+  if (req.session.user) return next();
+  // Não logado: só commenter anônimo se fornecer nome e email
+  const { name, email } = req.body;
+  if (name && email) return next();
+  return res.status(401).json({ error: 'Informe seu nome e e-mail para comentar' });
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -146,29 +174,22 @@ app.get('/auth-status', (req, res) => {
 });
 
 // ─── Cadastro de usuário ──────────────────────────────────────────────────────
-// Regra: qualquer admin logado pode criar usuários.
-// Caso não exista nenhum usuário ainda (bootstrap), permite sem autenticação.
+// PRODUÇÃO: descomente o bloco abaixo para reativar o cadastro público
+/*
 app.post('/register', async (req, res) => {
   if (!usersCollection) {
     return res.status(503).json({ error: 'Banco de dados não disponível' });
   }
 
   try {
-    const totalUsers = await usersCollection.countDocuments();
-    const isFirstUser = totalUsers === 0;
-    const callerIsAdmin = req.session.user?.role === 'admin';
-
-    if (!isFirstUser && !callerIsAdmin) {
-      return res.status(403).json({ error: 'Apenas administradores podem cadastrar usuários' });
-    }
-
     const { username, password, role } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
     }
 
-    const allowedRoles = ['admin', 'viewer'];
+    // Agora suporta admin, viewer e commenter
+    const allowedRoles = ['admin', 'viewer', 'commenter'];
     const userRole = allowedRoles.includes(role) ? role : 'viewer';
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -189,8 +210,9 @@ app.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'Erro ao cadastrar usuário' });
   }
 });
+*/
 
-// Lista usuários (somente admin) — útil para gestão futura
+// Lista usuários (somente admin)
 app.get('/users', ensureAdmin, async (req, res) => {
   try {
     const list = await usersCollection
@@ -224,27 +246,101 @@ app.delete('/users/:username', ensureAdmin, async (req, res) => {
   }
 });
 
+// ─── Comentários ──────────────────────────────────────────────────────────────
+
+// Lista comentários de uma imagem (acessível a qualquer usuário logado)
+app.get('/comments', ensureSignedIn, async (req, res) => {
+  const { imageKey } = req.query;
+  if (!imageKey) return res.status(400).json({ error: 'imageKey obrigatório' });
+
+  if (!commentsCollection) {
+    return res.status(503).json({ error: 'MongoDB não disponível' });
+  }
+
+  try {
+    const comments = await commentsCollection
+      .find({ imageKey: decodeURIComponent(imageKey) })
+      .sort({ createdAt: 1 })
+      .toArray();
+    return res.json(comments.map(({ _id, ...c }) => c));
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro ao buscar comentários' });
+  }
+});
+
+// Adiciona comentário
+// - Usuário logado (qualquer role): usa username da sessão, email opcional
+// - Não logado: precisa enviar name + email no body (commenter anônimo)
+app.post('/comments', ensureCanComment, async (req, res) => {
+  const { imageKey, text, name, email } = req.body;
+
+  if (!imageKey || !text?.trim()) {
+    return res.status(400).json({ error: 'imageKey e text são obrigatórios' });
+  }
+
+  if (!commentsCollection) {
+    return res.status(503).json({ error: 'MongoDB não disponível' });
+  }
+
+  try {
+    const sessionUser = req.session.user;
+
+    const comment = {
+      imageKey,
+      text: text.trim(),
+      // Se logado usa username; se anônimo usa o nome enviado
+      authorName: sessionUser ? sessionUser.username : name,
+      authorEmail: sessionUser ? (email || null) : email,
+      authorRole: sessionUser ? sessionUser.role : 'anonymous',
+      createdAt: new Date(),
+    };
+
+    await commentsCollection.insertOne(comment);
+    return res.json({ ok: true, comment: { ...comment } });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro ao salvar comentário' });
+  }
+});
+
+// Remove comentário (somente admin)
+app.delete('/comments/:id', ensureAdmin, async (req, res) => {
+  const { ObjectId } = require('mongodb');
+  try {
+    const result = await commentsCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+    if (result.deletedCount === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro ao remover comentário' });
+  }
+});
+
 // ─── Imagens ──────────────────────────────────────────────────────────────────
 app.get('/images', async (req, res) => {
   try {
     let images = [];
 
     if (imageCollection) {
-      // admin vê tudo; usuário logado vê só as suas; não-logado não vê nenhuma
       const sessionUser = req.session.user;
-      let query = { uploadedBy: '__none__' }; // padrão: ninguém sem login
+
+      // admin e viewer e commenter veem tudo; não logado não vê nada
+      let query = { uploadedBy: '__none__' };
 
       if (sessionUser?.role === 'admin') {
-        query = {}; // tudo
+        query = {};
+      } else if (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter') {
+        query = {}; // vê todas as imagens
       } else if (sessionUser?.username) {
-        query = { uploadedBy: sessionUser.username }; // só as suas
+        query = { uploadedBy: sessionUser.username };
       }
 
       images = await imageCollection.find(query).sort({ uploadDate: -1 }).toArray();
       return res.json(images.map(({ _id, ...doc }) => doc));
     }
 
-    // fallback sem MongoDB: lista bruta do R2 (sem controle de dono)
+    // fallback sem MongoDB
     const listCommand = new ListObjectsV2Command({ Bucket: process.env.R2_BUCKET });
     const result = await s3.send(listCommand);
     const r2Images = (result.Contents || []).map((item) => ({
@@ -270,6 +366,12 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
     return res.status(400).json({ error: 'Arquivo não enviado' });
   }
 
+  // viewer e commenter não podem fazer upload
+  const role = req.session.user?.role;
+  if (role === 'viewer' || role === 'commenter') {
+    return res.status(403).json({ error: 'Seu perfil não permite enviar imagens' });
+  }
+
   if (!imageCollection) {
     return res.status(500).json({ error: 'MongoDB não está disponível' });
   }
@@ -279,13 +381,11 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
   const photoDate = req.body.photoDate || new Date().toISOString();
 
   try {
-    // Redimensiona para no máximo 1920px e converte para WebP (qualidade 85)
     const processedBuffer = await sharp(req.file.buffer)
       .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 85 })
       .toBuffer();
 
-    // Nome do arquivo sempre com extensão .webp
     const originalName = req.file.originalname.replace(/\.[^.]+$/, '');
     const key = `${originalName}.webp`;
 
@@ -320,6 +420,12 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
 app.delete('/images', ensureSignedIn, async (req, res) => {
   const key = req.query.key;
   if (!key) return res.status(400).json({ error: 'Chave da imagem obrigatória' });
+
+  // viewer e commenter não podem excluir
+  const role = req.session.user?.role;
+  if (role === 'viewer' || role === 'commenter') {
+    return res.status(403).json({ error: 'Seu perfil não permite excluir imagens' });
+  }
 
   try {
     const decodedKey = decodeURIComponent(key);
