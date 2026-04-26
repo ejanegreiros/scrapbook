@@ -1112,16 +1112,18 @@ function buildCommentForm(imageKey, safeId) {
   const form = document.createElement('div');
   form.className = 'comment-form';
 
+  // viewer e commenter precisam informar nome (e email opcional para viewer, obrigatorio para commenter)
+  const needsName = currentUser?.role === 'commenter' || currentUser?.role === 'viewer';
   const isCommenter = currentUser?.role === 'commenter';
 
-  if (isCommenter) {
+  if (needsName) {
     const anonFields = document.createElement('div');
     anonFields.className = 'anon-fields';
     anonFields.style.display = 'flex';
     anonFields.style.flexDirection = 'column';
     anonFields.innerHTML = `
       <input type="text"  id="comment-name-${safeId}"  placeholder="${t('comment.namePlaceholder')}"  required />
-      <input type="email" id="comment-email-${safeId}" placeholder="${t('comment.emailPlaceholder')}" required />
+      <input type="email" id="comment-email-${safeId}" placeholder="${t('comment.emailPlaceholder')}" ${isCommenter ? 'required' : ''} />
     `;
     form.appendChild(anonFields);
   }
@@ -1142,10 +1144,12 @@ function buildCommentForm(imageKey, safeId) {
     if (!text) return;
 
     let name = null, email = null;
-    if (isCommenter) {
+    if (needsName) {
       name  = document.getElementById(`comment-name-${safeId}`)?.value.trim();
       email = document.getElementById(`comment-email-${safeId}`)?.value.trim();
-      if (!name || !email) { alert(t('comment.anonAlert')); return; }
+      // commenter: nome e email obrigatórios; viewer: só nome obrigatório
+      if (!name) { alert(t('comment.anonAlert')); return; }
+      if (isCommenter && !email) { alert(t('comment.anonAlert')); return; }
     }
 
     const body = { imageKey, text };
@@ -1220,9 +1224,13 @@ async function loadComments(imageKey, safeId) {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
 
+      // displayName: para todos os roles mostra o nome salvo no banco
+      // Para viewer/commenter o nome vem do campo digitado; para admin/anon do username/nome
+      const displayName = escHtml(c.authorName);
+
       item.innerHTML = `
         <div class="comment-author">
-          ${escHtml(c.authorName)}
+          ${displayName}
           <span class="comment-role-badge ${roleBadgeClass}">${roleLabel}</span>
         </div>
         ${c.authorEmail ? `<div class="comment-email">${escHtml(c.authorEmail)}</div>` : ''}

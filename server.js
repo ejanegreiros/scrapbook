@@ -241,8 +241,13 @@ app.post('/comments', ensureCanComment, async (req, res) => {
     const comment = {
       imageKey,
       text: text.trim(),
-      authorName: sessionUser ? sessionUser.username : name,
-      authorEmail: sessionUser ? (email || null) : email,
+      // admin usa o próprio username; viewer e commenter usam o nome digitado no formulário
+      authorName: (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter')
+        ? (name || sessionUser.username)
+        : (sessionUser ? sessionUser.username : name),
+      authorEmail: (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter')
+        ? (email || null)
+        : (sessionUser ? null : email),
       authorRole: sessionUser ? sessionUser.role : 'anonymous',
       createdAt: new Date(),
     };
