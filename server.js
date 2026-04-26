@@ -127,12 +127,9 @@ function ensureAdmin(req, res, next) {
   return res.status(403).json({ error: 'Acesso negado' });
 }
 
-// viewer e commenter podem comentar; commenter também pode comentar sem login (nome+email obrigatório)
 function ensureCanComment(req, res, next) {
   const role = req.session.user?.role;
-  // Usuários logados com qualquer role podem comentar
   if (req.session.user) return next();
-  // Não logado: só commenter anônimo se fornecer nome e email
   const { name, email } = req.body;
   if (name && email) return next();
   return res.status(401).json({ error: 'Informe seu nome e e-mail para comentar' });
@@ -173,46 +170,7 @@ app.get('/auth-status', (req, res) => {
   return res.json({ user: req.session.user || null });
 });
 
-// ─── Cadastro de usuário ──────────────────────────────────────────────────────
-// PRODUÇÃO: descomente o bloco abaixo para reativar o cadastro público
-/*
-app.post('/register', async (req, res) => {
-  if (!usersCollection) {
-    return res.status(503).json({ error: 'Banco de dados não disponível' });
-  }
-
-  try {
-    const { username, password, role } = req.body;
-
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Usuário e senha são obrigatórios' });
-    }
-
-    // Agora suporta admin, viewer e commenter
-    const allowedRoles = ['admin', 'viewer', 'commenter'];
-    const userRole = allowedRoles.includes(role) ? role : 'viewer';
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    await usersCollection.insertOne({
-      username,
-      password: hashedPassword,
-      role: userRole,
-      createdAt: new Date(),
-    });
-
-    return res.json({ ok: true });
-  } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({ error: 'Nome de usuário já existe' });
-    }
-    console.error(err);
-    return res.status(500).json({ error: 'Erro ao cadastrar usuário' });
-  }
-});
-*/
-
-// Lista usuários (somente admin)
+// ─── Usuários ─────────────────────────────────────────────────────────────────
 app.get('/users', ensureAdmin, async (req, res) => {
   try {
     const list = await usersCollection
@@ -226,7 +184,6 @@ app.get('/users', ensureAdmin, async (req, res) => {
   }
 });
 
-// Remove usuário (somente admin, não pode remover a si mesmo)
 app.delete('/users/:username', ensureAdmin, async (req, res) => {
   const { username } = req.params;
 
@@ -247,8 +204,6 @@ app.delete('/users/:username', ensureAdmin, async (req, res) => {
 });
 
 // ─── Comentários ──────────────────────────────────────────────────────────────
-
-// Lista comentários de uma imagem (acessível a qualquer usuário logado)
 app.get('/comments', ensureSignedIn, async (req, res) => {
   const { imageKey } = req.query;
   if (!imageKey) return res.status(400).json({ error: 'imageKey obrigatório' });
@@ -262,16 +217,13 @@ app.get('/comments', ensureSignedIn, async (req, res) => {
       .find({ imageKey: decodeURIComponent(imageKey) })
       .sort({ createdAt: 1 })
       .toArray();
-    return res.json(comments.map(({ _id, ...c }) => c));
+    return res.json(comments.map(({ _id, ...c }) => ({ ...c, _id: _id.toString() })));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro ao buscar comentários' });
   }
 });
 
-// Adiciona comentário
-// - Usuário logado (qualquer role): usa username da sessão, email opcional
-// - Não logado: precisa enviar name + email no body (commenter anônimo)
 app.post('/comments', ensureCanComment, async (req, res) => {
   const { imageKey, text, name, email } = req.body;
 
@@ -289,22 +241,20 @@ app.post('/comments', ensureCanComment, async (req, res) => {
     const comment = {
       imageKey,
       text: text.trim(),
-      // Se logado usa username; se anônimo usa o nome enviado
       authorName: sessionUser ? sessionUser.username : name,
       authorEmail: sessionUser ? (email || null) : email,
       authorRole: sessionUser ? sessionUser.role : 'anonymous',
       createdAt: new Date(),
     };
 
-    await commentsCollection.insertOne(comment);
-    return res.json({ ok: true, comment: { ...comment } });
+    const inserted = await commentsCollection.insertOne(comment);
+    return res.json({ ok: true, comment: { ...comment, _id: inserted.insertedId.toString() } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro ao salvar comentário' });
   }
 });
 
-// Remove comentário (somente admin)
 app.delete('/comments/:id', ensureAdmin, async (req, res) => {
   const { ObjectId } = require('mongodb');
   try {
@@ -317,6 +267,44 @@ app.delete('/comments/:id', ensureAdmin, async (req, res) => {
   }
 });
 
+// ─── Ranking de comentários ───────────────────────────────────────────────────
+// Retorna um map { imageKey -> commentCount } para todas as imagens com ao menos 1 comentário.
+// Acessível a qualquer usuário logado (mesma regra do /comments).
+app.get('/comments/counts', ensureSignedIn, async (req, res) => {
+  if (!commentsCollection) {
+    return res.status(503).json({ error: 'MongoDB não disponível' });
+  }
+
+  try {
+    const pipeline = [
+      {
+        $group: {
+          _id: '$imageKey',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          imageKey: '$_id',
+          count: 1,
+        },
+      },
+    ];
+
+    const rows = await commentsCollection.aggregate(pipeline).toArray();
+
+    // Converte array → objeto { [imageKey]: count }
+    const counts = {};
+    rows.forEach(r => { counts[r.imageKey] = r.count; });
+
+    return res.json(counts);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro ao calcular ranking' });
+  }
+});
+
 // ─── Imagens ──────────────────────────────────────────────────────────────────
 app.get('/images', async (req, res) => {
   try {
@@ -325,13 +313,12 @@ app.get('/images', async (req, res) => {
     if (imageCollection) {
       const sessionUser = req.session.user;
 
-      // admin e viewer e commenter veem tudo; não logado não vê nada
       let query = { uploadedBy: '__none__' };
 
       if (sessionUser?.role === 'admin') {
         query = {};
       } else if (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter') {
-        query = {}; // vê todas as imagens
+        query = {};
       } else if (sessionUser?.username) {
         query = { uploadedBy: sessionUser.username };
       }
@@ -366,7 +353,6 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
     return res.status(400).json({ error: 'Arquivo não enviado' });
   }
 
-  // viewer e commenter não podem fazer upload
   const role = req.session.user?.role;
   if (role === 'viewer' || role === 'commenter') {
     return res.status(403).json({ error: 'Seu perfil não permite enviar imagens' });
@@ -421,7 +407,6 @@ app.delete('/images', ensureSignedIn, async (req, res) => {
   const key = req.query.key;
   if (!key) return res.status(400).json({ error: 'Chave da imagem obrigatória' });
 
-  // viewer e commenter não podem excluir
   const role = req.session.user?.role;
   if (role === 'viewer' || role === 'commenter') {
     return res.status(403).json({ error: 'Seu perfil não permite excluir imagens' });

@@ -152,6 +152,38 @@
       gap: 0.5rem;
       font-size: 0.9rem;
     }
+
+    /* ── Ranking badge no cabeçalho do card ─────────────── */
+    .card-rank-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border-radius: 999px;
+      padding: 3px 10px 3px 7px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(99,102,241,.35);
+    }
+    .card-rank-badge .rank-icon { font-size: 0.9rem; }
+    /* Medalha de ouro para o 1º colocado */
+    .card-rank-badge.rank-1st {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 2px 10px rgba(245,158,11,.45);
+    }
+    /* Medalha de prata para o 2º */
+    .card-rank-badge.rank-2nd {
+      background: linear-gradient(135deg, #94a3b8, #64748b);
+      box-shadow: 0 2px 8px rgba(100,116,139,.35);
+    }
+    /* Bronze para o 3º */
+    .card-rank-badge.rank-3rd {
+      background: linear-gradient(135deg, #cd7c3f, #a85f28);
+      box-shadow: 0 2px 8px rgba(180,100,50,.35);
+    }
   </style>
 </head>
 <body>
@@ -852,10 +884,28 @@ async function handleUpload(event) {
 }
 
 // ─── Gallery ──────────────────────────────────────────────────────────────────
+let commentCountsCache = {}; // { [imageKey]: count }
+
 async function loadImages() {
   try {
-    const res   = await fetch('/images');
-    imagesCache = await res.json();
+    // Busca imagens e contagens em paralelo
+    const [imagesRes, countsRes] = await Promise.all([
+      fetch('/images'),
+      currentUser ? fetch('/comments/counts') : Promise.resolve(null),
+    ]);
+
+    const raw = await imagesRes.json();
+
+    // Contagens só disponíveis para usuarios logados
+    commentCountsCache = countsRes ? await countsRes.json() : {};
+
+    // Ordena: maior numero de comentarios primeiro; empate mantem ordem original
+    imagesCache = [...raw].sort((a, b) => {
+      const ca = commentCountsCache[a.key] || 0;
+      const cb = commentCountsCache[b.key] || 0;
+      return cb - ca;
+    });
+
     renderGallery(imagesCache);
     renderLocationFilter(imagesCache);
   } catch {
@@ -892,6 +942,11 @@ async function renderGallery(images) {
   if (filtered.length === 0) { emptyState.style.display = 'block'; return; }
   emptyState.style.display = 'none';
 
+  // Calcula posição no ranking global (entre todas as imagens com comentarios)
+  const rankingOrder = [...imagesCache]
+    .filter(i => (commentCountsCache[i.key] || 0) > 0)
+    .sort((a, b) => (commentCountsCache[b.key] || 0) - (commentCountsCache[a.key] || 0));
+
   filtered.forEach(async img => {
     const safeId = img.key.replace(/[^a-zA-Z0-9]/g, '_');
     const column = document.createElement('div');
@@ -900,12 +955,29 @@ async function renderGallery(images) {
     const post = document.createElement('article');
     post.className = 'card h-100 gallery-card';
 
+    // Badge de ranking
+    const commentCount = commentCountsCache[img.key] || 0;
+    const rankPos = rankingOrder.findIndex(i => i.key === img.key); // -1 se sem comentarios
+    const rankIcons = ['🥇', '🥈', '🥉'];
+    const rankClasses = ['rank-1st', 'rank-2nd', 'rank-3rd'];
+
+    let badgeHtml = '';
+    if (commentCount > 0) {
+      const icon = rankPos < 3 ? rankIcons[rankPos] : '💬';
+      const cls  = rankPos < 3 ? rankClasses[rankPos] : '';
+      const label = commentCount === 1
+        ? `1 ${t('comment.singular')}`
+        : `${commentCount} ${t('comment.plural')}`;
+      badgeHtml = `<span class="card-rank-badge ${cls}"><span class="rank-icon">${icon}</span>${label}</span>`;
+    }
+
     // Header
     const header = document.createElement('div');
     header.className = 'd-flex align-items-center gap-3 px-3 pt-3';
     header.innerHTML = `
       <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;">S</div>
       <div><strong class="d-block">ScrapBook</strong><small class="text-muted">${t('gallery.memory')}</small></div>
+      ${badgeHtml}
     `;
     post.appendChild(header);
 
@@ -1088,7 +1160,10 @@ function buildCommentForm(imageKey, safeId) {
 
     if (res.ok) {
       textarea.value = '';
+      // Atualiza contagens locais e re-renderiza a galeria para refletir novo ranking
+      commentCountsCache[imageKey] = (commentCountsCache[imageKey] || 0) + 1;
       await loadComments(imageKey, safeId);
+      renderGallery(imagesCache);
     } else {
       const d = await res.json();
       alert(d.error || t('comment.sendError'));
@@ -1164,7 +1239,10 @@ async function loadComments(imageKey, safeId) {
         delBtn.addEventListener('click', async () => {
           if (!confirm(t('comment.deleteConfirm'))) return;
           await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
+          // Atualiza contagem local e re-renderiza galeria
+          if (commentCountsCache[imageKey] > 0) commentCountsCache[imageKey]--;
           await loadComments(imageKey, safeId);
+          renderGallery(imagesCache);
         });
         item.appendChild(delBtn);
       }
