@@ -388,6 +388,8 @@ const translations = {
     'login.userPlaceholder': 'Usuário',
     'login.passPlaceholder': 'Senha',
     'login.btn': 'Entrar',
+    'login.btnLoading': 'Entrando…',
+    'login.errorMsg': 'Erro ao fazer login.',
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Sair',
     'upload.title': 'Upload de imagem',
@@ -456,6 +458,8 @@ const translations = {
     'login.userPlaceholder': 'Username',
     'login.passPlaceholder': 'Password',
     'login.btn': 'Sign in',
+    'login.btnLoading': 'Signing in…',
+    'login.errorMsg': 'Login error.',
     'login.connectedAs': 'Signed in as',
     'login.logoutBtn': 'Sign out',
     'upload.title': 'Upload image',
@@ -524,6 +528,8 @@ const translations = {
     'login.userPlaceholder': 'Benutzername',
     'login.passPlaceholder': 'Passwort',
     'login.btn': 'Anmelden',
+    'login.btnLoading': 'Anmelden…',
+    'login.errorMsg': 'Anmeldefehler.',
     'login.connectedAs': 'Angemeldet als',
     'login.logoutBtn': 'Abmelden',
     'upload.title': 'Bild hochladen',
@@ -592,6 +598,8 @@ const translations = {
     'login.userPlaceholder': 'Usuario',
     'login.passPlaceholder': 'Contraseña',
     'login.btn': 'Entrar',
+    'login.btnLoading': 'Entrando…',
+    'login.errorMsg': 'Error al iniciar sesión.',
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Salir',
     'upload.title': 'Subir imagen',
@@ -660,6 +668,8 @@ const translations = {
     'login.userPlaceholder': 'Nom d\'utilisateur',
     'login.passPlaceholder': 'Mot de passe',
     'login.btn': 'Se connecter',
+    'login.btnLoading': 'Connexion…',
+    'login.errorMsg': 'Erreur de connexion.',
     'login.connectedAs': 'Connecté en tant que',
     'login.logoutBtn': 'Se déconnecter',
     'upload.title': 'Envoyer une image',
@@ -834,19 +844,42 @@ function goHome() {
 async function handleLogin(event) {
   event.preventDefault();
   const form = event.target;
-  const formData = new FormData(form);
-  const res  = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: formData.get('username'), password: formData.get('password') }),
-  });
-  const data = await res.json();
+  const submitBtn = form.querySelector('button[type="submit"]');
   const errorEl = document.getElementById('auth-error');
-  if (!res.ok) { errorEl.textContent = data.error || t('login.errorMsg'); return; }
+
+  // Captura os dados ANTES de desabilitar os campos (inputs disabled são ignorados pelo FormData)
+  const formData = new FormData(form);
+
+  // Bloqueia o formulário e mostra estado de carregamento
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' + t('login.btnLoading');
+  form.querySelectorAll('input').forEach(i => i.disabled = true);
   errorEl.textContent = '';
-  currentUser = data.user;
-  renderAuth();
-  loadImages();
+
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: formData.get('username'), password: formData.get('password') }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errorEl.textContent = data.error || t('login.errorMsg');
+      return;
+    }
+
+    currentUser = data.user;
+    renderAuth();
+    loadImages();
+  } catch {
+    errorEl.textContent = t('login.errorMsg');
+  } finally {
+    // Restaura o formulário em qualquer caso (erro ou sucesso)
+    submitBtn.disabled = false;
+    submitBtn.textContent = t('login.btn');
+    form.querySelectorAll('input').forEach(i => i.disabled = false);
+  }
 }
 
 async function handleLogout() {
