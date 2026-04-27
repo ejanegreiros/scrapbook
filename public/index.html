@@ -192,7 +192,7 @@
     <a class="navbar-brand" href="#" data-i18n="brand">📸 Scrapbook World Cruise 2026</a>
     <div class="d-flex gap-2 ms-auto align-items-center">
       <button id="home-btn" class="btn btn-outline-light btn-sm btn-rounded" data-i18n="nav.home">Home</button>
-      <button id="new-image-btn" class="btn btn-primary btn-sm btn-rounded" data-i18n="nav.newImage">Nova imagem</button>
+      <button id="new-image-btn" class="btn btn-primary btn-sm btn-rounded" data-i18n="nav.newImage" style="display:none;">Nova imagem</button>
 
       <!-- ── Seletor de idioma ── -->
       <div class="dropdown">
@@ -806,7 +806,7 @@ function renderAuth() {
     adminActions.style.display = canUpload ? 'block' : 'none';
 
     const newImageBtn = document.getElementById('new-image-btn');
-    if (newImageBtn) newImageBtn.style.display = currentUser.username === 'guest' ? 'none' : '';
+    if (newImageBtn) newImageBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
 
     if (authPanel) authPanel.style.display = 'none';
 
@@ -823,7 +823,7 @@ function renderAuth() {
     ddLogoutItem.style.display = 'none';
 
     const newImageBtn = document.getElementById('new-image-btn');
-    if (newImageBtn) newImageBtn.style.display = '';
+    if (newImageBtn) newImageBtn.style.display = 'none';
   }
 }
 
