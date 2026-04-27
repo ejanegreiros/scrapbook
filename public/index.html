@@ -986,6 +986,8 @@ async function renderGallery(images) {
     imageWrapper.className = 'card-img-container';
     const image = document.createElement('img');
     image.src = img.url; image.alt = img.key; image.loading = 'lazy';
+    image.style.cursor = 'zoom-in';
+    image.addEventListener('click', () => openModal(img.url, img.key));
     imageWrapper.appendChild(image);
     post.appendChild(imageWrapper);
 
