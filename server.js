@@ -170,6 +170,45 @@ app.get('/auth-status', (req, res) => {
   return res.json({ user: req.session.user || null });
 });
 
+
+// ─── Login via QR Code (acesso visitante) ─────────────────────────────────────
+app.get('/login-qr', async (req, res) => {
+  const { key } = req.query;
+
+  // 1️⃣ Valida a chave do QR
+  if (key !== process.env.QR_ACCESS_KEY) {
+    return res.status(403).send('QR Code inválido');
+  }
+
+  if (!usersCollection) {
+    return res.status(503).send('Banco indisponível');
+  }
+
+  try {
+    // 2️⃣ Busca o usuário guest já existente
+    const user = await usersCollection.findOne({ username: 'guest' });
+
+    if (!user) {
+      return res.status(404).send('Usuário guest não encontrado');
+    }
+
+    // 3️⃣ Cria a sessão exatamente como no login normal
+    req.session.user = {
+      username: user.username,
+      role: user.role
+    };
+
+    // 4️⃣ Redireciona para a home
+    return res.redirect('/');
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send('Erro ao processar login via QR');
+  }
+});
+
+
+
 // ─── Usuários ─────────────────────────────────────────────────────────────────
 app.get('/users', ensureAdmin, async (req, res) => {
   try {
