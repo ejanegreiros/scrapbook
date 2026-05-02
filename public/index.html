@@ -310,6 +310,37 @@
         <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100" data-i18n="upload.btn">Enviar imagem</button>
       </div>
     </form>
+
+    <hr class="my-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <p class="fw-semibold mb-0">🔗 Acesso por QR Code</p>
+        <small class="text-muted">Compartilhe com visitantes para acesso direto</small>
+      </div>
+      <button class="btn btn-outline-primary btn-sm btn-rounded" onclick="showQrModal()">Gerar QR Code</button>
+    </div>
+  </div>
+
+  <!-- Modal QR Code -->
+  <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px">
+      <div class="modal-content" style="border-radius:1.5rem;">
+        <div class="modal-header border-0 pb-0 px-4 pt-4">
+          <h5 class="modal-title fw-bold">📱 QR Code de Acesso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center px-4 pb-4">
+          <p class="text-muted small mb-3">Escaneie para entrar como visitante</p>
+          <div class="d-flex justify-content-center mb-3">
+            <div id="qr-canvas" style="border-radius:1rem;padding:12px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);display:inline-block;"></div>
+          </div>
+          <div class="input-group input-group-sm">
+            <input type="text" id="qr-url-input" class="form-control" readonly style="font-size:.75rem;">
+            <button class="btn btn-outline-secondary" onclick="copyQrUrl()">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Gallery -->
@@ -387,6 +418,7 @@
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -1151,6 +1183,47 @@ async function renderGallery(images) {
         coordsEl.textContent = t('gallery.coordsUnavailable');
       }
     }
+  });
+}
+
+// ─── QR Code modal ───────────────────────────────────────────────────────────
+async function showQrModal() {
+  try {
+    const res  = await fetch('/qr-key');
+    const data = await res.json();
+    if (!res.ok || !data.key) {
+      alert('QR_ACCESS_KEY nao configurada no .env do servidor.');
+      return;
+    }
+
+    const baseUrl = window.location.origin;
+    const url     = `${baseUrl}/login-qr?key=${encodeURIComponent(data.key)}`;
+
+    document.getElementById('qr-url-input').value = url;
+
+    const canvas = document.getElementById('qr-canvas');
+    canvas.innerHTML = '';
+    new QRCode(canvas, {
+      text: url,
+      width: 220,
+      height: 220,
+      colorDark: '#1e293b',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    new bootstrap.Modal(document.getElementById('qrModal')).show();
+  } catch (e) {
+    alert('Erro ao buscar chave QR: ' + e.message);
+  }
+}
+
+function copyQrUrl() {
+  const input = document.getElementById('qr-url-input');
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = input.nextElementSibling;
+    btn.textContent = 'Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
   });
 }
 

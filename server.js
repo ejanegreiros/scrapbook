@@ -113,7 +113,11 @@ app.use(
     secret: process.env.SESSION_SECRET || 'troque-para-uma-senha-segura',
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 1000 * 60 * 60 },
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 24 horas
+      sameSite: 'lax',              // permite cookie após redirect externo (QR code)
+      secure: false,                // true apenas em HTTPS em producao
+    },
   })
 );
 
@@ -172,6 +176,13 @@ app.get('/auth-status', (req, res) => {
 });
 
 
+// ─── Retorna chave QR apenas para admin (usada para gerar o QR no frontend) ──
+app.get('/qr-key', ensureAdmin, (req, res) => {
+  const key = process.env.QR_ACCESS_KEY || '';
+  if (!key) return res.status(404).json({ error: 'QR_ACCESS_KEY nao configurada no .env' });
+  res.json({ key });
+});
+
 // ─── Login via QR Code (acesso visitante) ─────────────────────────────────────
 app.get('/login-qr', async (req, res) => {
   const { key } = req.query;
@@ -199,8 +210,15 @@ app.get('/login-qr', async (req, res) => {
       role: user.role
     };
 
-    // 4️⃣ Redireciona para a home
-    return res.redirect('/');
+    // 4️⃣ Salva a sessão explicitamente antes de redirecionar
+    // (necessário para que o cookie seja enviado corretamente após redirect externo)
+    req.session.save((err) => {
+      if (err) {
+        console.error('Erro ao salvar sessao:', err);
+        return res.status(500).send('Erro ao processar login via QR');
+      }
+      return res.redirect('/');
+    });
 
   } catch (err) {
     console.error(err);
