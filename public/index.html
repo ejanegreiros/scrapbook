@@ -359,7 +359,14 @@
         <h2 class="fw-bold mb-0" data-i18n="gallery.title">Galeria</h2>
         <p class="text-secondary mb-0" data-i18n="gallery.subtitle">Veja as imagens enviadas e deixe seu comentário.</p>
       </div>
-      <div id="location-filter-buttons" class="btn-group flex-wrap"></div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div id="location-filter-buttons" class="btn-group flex-wrap"></div>
+        <select id="sort-select" class="form-select form-select-sm" style="width:auto;border-radius:999px;font-size:.82rem;">
+          <option value="comments">💬 Mais comentados</option>
+          <option value="newest">📅 Mais recentes</option>
+          <option value="oldest">📅 Mais antigos</option>
+        </select>
+      </div>
     </div>
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="gallery"></div>
     <p class="empty-gallery text-center mt-4" id="empty-gallery" style="display:none;" data-i18n="gallery.empty">Nenhuma imagem encontrada.</p>
@@ -926,10 +933,18 @@ function setLanguage(lang) {
 let currentUser = null;
 let imagesCache = [];
 let currentLocationFilter = 'all';
+let currentSort = 'comments';
 
 const authPanel             = document.getElementById('auth-panel');
 const uploadPanel           = document.getElementById('admin-actions');
 const locationFilterButtons = document.getElementById('location-filter-buttons');
+const sortSelect = document.getElementById('sort-select');
+if (sortSelect) {
+  sortSelect.addEventListener('change', () => {
+    currentSort = sortSelect.value;
+    renderGallery(imagesCache);
+  });
+}
 const photoDateInput        = document.getElementById('photoDate');
 
 const imageModalEl   = document.getElementById('imageModalBootstrap');
@@ -1147,7 +1162,19 @@ async function renderGallery(images) {
   const gallery    = document.getElementById('gallery');
   const emptyState = document.getElementById('empty-gallery');
   gallery.innerHTML = '';
-  const filtered = currentLocationFilter === 'all' ? images : images.filter(i => i.location === currentLocationFilter);
+  // Ordena conforme seleção do usuário
+  const sorted = [...images].sort((a, b) => {
+    if (currentSort === 'newest') {
+      return new Date(b.photoDate || b.uploadDate || 0) - new Date(a.photoDate || a.uploadDate || 0);
+    } else if (currentSort === 'oldest') {
+      return new Date(a.photoDate || a.uploadDate || 0) - new Date(b.photoDate || b.uploadDate || 0);
+    } else {
+      // comments: usa a ordem já definida em imagesCache (mais comentados primeiro)
+      return 0;
+    }
+  });
+
+  const filtered = currentLocationFilter === 'all' ? sorted : sorted.filter(i => i.location === currentLocationFilter);
   if (filtered.length === 0) { emptyState.style.display = 'block'; return; }
   emptyState.style.display = 'none';
 
