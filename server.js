@@ -379,11 +379,13 @@ app.get('/images', async (req, res) => {
       let query = { uploadedBy: '__none__' };
 
       if (sessionUser?.role === 'admin') {
-        query = {};
+        // Admin ve todas as imagens (publicas + as proprias privadas)
+        query = { $or: [ { private: { $ne: true } }, { uploadedBy: sessionUser.username } ] };
       } else if (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter') {
-        query = {};
+        // Viewer/commenter ve apenas imagens publicas
+        query = { private: { $ne: true } };
       } else if (sessionUser?.username) {
-        query = { uploadedBy: sessionUser.username };
+        query = { uploadedBy: sessionUser.username, private: { $ne: true } };
       }
 
       images = await imageCollection.find(query).sort({ uploadDate: -1 }).toArray();
@@ -503,6 +505,7 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
       summary,
       location,
       gps,                              // ← coordenadas extraídas do EXIF original
+      private: req.body.private === 'true', // imagem visivel apenas para o proprio admin
       uploadedBy: req.session.user.username,
     };
 

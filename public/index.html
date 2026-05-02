@@ -307,6 +307,14 @@
         <input type="text" class="form-control" name="summary"
                data-i18n-placeholder="upload.summaryPlaceholder" placeholder="Resumo da imagem" />
       </div>
+      <div class="col-12" id="private-toggle-wrapper" style="display:none;">
+        <div class="form-check form-switch ps-0 d-flex align-items-center gap-2 p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
+          <input class="form-check-input ms-0" type="checkbox" id="privateToggle" name="private" style="width:2.5rem;height:1.3rem;cursor:pointer;">
+          <label class="form-check-label fw-semibold text-secondary" for="privateToggle" data-i18n="upload.privateLabel">
+            Publicar somente para mim (imagem privada)
+          </label>
+        </div>
+      </div>
       <div class="col-12">
         <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100" data-i18n="upload.btn">Enviar imagem</button>
       </div>
@@ -500,6 +508,8 @@ const translations = {
     'comment.roleAnonymous': 'Visitante',
     'modal.title': 'Visualização da imagem',
     'modal.hint': 'Clique fora ou use o botão de fechar.',
+    'upload.privateLabel': 'Publicar somente para mim (imagem privada)',
+    'upload.privateBadge': '🔒 Privado',
   },
   en: {
     flag: '🇺🇸',
@@ -570,6 +580,8 @@ const translations = {
     'comment.roleAnonymous': 'Guest',
     'modal.title': 'Image view',
     'modal.hint': 'Click outside or use the close button.',
+    'upload.privateLabel': 'Post only for me (private image)',
+    'upload.privateBadge': '🔒 Private',
   },
   de: {
     flag: '🇩🇪',
@@ -640,6 +652,8 @@ const translations = {
     'comment.roleAnonymous': 'Gast',
     'modal.title': 'Bildansicht',
     'modal.hint': 'Klicken Sie außerhalb oder verwenden Sie die Schaltfläche zum Schließen.',
+    'upload.privateLabel': 'Nur für mich veröffentlichen (privates Bild)',
+    'upload.privateBadge': '🔒 Privat',
   },
   es: {
     flag: '🇪🇸',
@@ -710,6 +724,8 @@ const translations = {
     'comment.roleAnonymous': 'Visitante',
     'modal.title': 'Ver imagen',
     'modal.hint': 'Haz clic fuera o usa el botón de cerrar.',
+    'upload.privateLabel': 'Publicar solo para mí (imagen privada)',
+    'upload.privateBadge': '🔒 Privado',
   },
   fr: {
     flag: '🇫🇷',
@@ -780,6 +796,8 @@ const translations = {
     'comment.roleAnonymous': 'Visiteur',
     'modal.title': 'Visualisation de l\'image',
     'modal.hint': 'Cliquez à l\'extérieur ou utilisez le bouton de fermeture.',
+    'upload.privateLabel': 'Publier uniquement pour moi (image privée)',
+    'upload.privateBadge': '🔒 Privé',
   },
   it: {
     flag: '🇮🇹',
@@ -850,6 +868,8 @@ const translations = {
     'comment.roleAnonymous': 'Ospite',
     'modal.title': 'Visualizzazione immagine',
     'modal.hint': 'Clicca fuori o usa il pulsante di chiusura.',
+    'upload.privateLabel': 'Pubblica solo per me (immagine privata)',
+    'upload.privateBadge': '🔒 Privato',
   },
 };
 
@@ -857,6 +877,14 @@ let currentLang = localStorage.getItem('lang') || 'pt';
 
 function t(key) {
   return (translations[currentLang] || translations['pt'])[key] || key;
+}
+
+// Mostra o toggle de imagem privada apenas para admins
+function updatePrivateToggleVisibility() {
+  const wrapper = document.getElementById('private-toggle-wrapper');
+  if (!wrapper) return;
+  const isAdmin = document.body.dataset.role === 'admin';
+  wrapper.style.display = isAdmin ? 'block' : 'none';
 }
 
 function applyLanguage(lang) {
@@ -934,6 +962,8 @@ function renderAuth() {
 
     const canUpload = currentUser.role === 'admin';
     adminActions.style.display = canUpload ? 'block' : 'none';
+    document.body.dataset.role = currentUser.role;
+    updatePrivateToggleVisibility();
 
     const newImageBtn = document.getElementById('new-image-btn');
     if (newImageBtn) newImageBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
@@ -1045,6 +1075,8 @@ async function handleUpload(event) {
     formData.append('summary', form.querySelector('input[name="summary"]').value || '');
     formData.append('location', form.querySelector('input[name="location"]').value || '');
     formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
+    const privateCheck = form.querySelector('input[name="private"]');
+    formData.append('private', privateCheck?.checked ? 'true' : 'false');
     if (heicGps?.lat && heicGps?.lng) {
       formData.append('gpsLat', heicGps.lat);
       formData.append('gpsLng', heicGps.lng);
@@ -1236,6 +1268,7 @@ async function renderGallery(images) {
         <div class="card-title-modern">
           <span class="card-date">${dateValue}</span>
           <span class="card-location">${img.location || t('gallery.noLocation')}</span>
+          ${img.private ? `<span class="badge" style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;border-radius:.5rem;padding:2px 7px;">${t('upload.privateBadge')}</span>` : ''}
         </div>`;
     }
 
