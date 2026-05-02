@@ -5,6 +5,7 @@ const session = require('express-session');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const sharp = require('sharp');
+const exifr = require('exifr');
 const { MongoClient } = require('mongodb');
 const {
   S3Client,
@@ -408,10 +409,58 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
 
   const summary = (req.body.summary || '').trim();
   const location = (req.body.location || '').trim();
-  const photoDate = req.body.photoDate || new Date().toISOString();
+
+  // ── Extrai GPS e data EXIF do buffer ORIGINAL (antes do sharp) ──────────────
+  let gps = null;
+  let resolvedPhotoDate = req.body.photoDate || null;
 
   try {
-    const processedBuffer = await sharp(req.file.buffer)
+    // exifr suporta HEIC, JPEG e outros formatos nativamente
+    const exifData = await exifr.parse(req.file.buffer, {
+      gps: true,
+      tiff: true,
+      heic: true,
+      translateValues: true,
+      reviveValues: true,
+    });
+
+    console.log('EXIF data:', JSON.stringify(exifData));
+
+    if (exifData?.latitude != null && exifData?.longitude != null) {
+      gps = {
+        lat: parseFloat(exifData.latitude.toFixed(6)),
+        lng: parseFloat(exifData.longitude.toFixed(6)),
+      };
+    }
+
+    if (!resolvedPhotoDate) {
+      const exifDate = exifData?.DateTimeOriginal || exifData?.DateTime;
+      if (exifDate) {
+        resolvedPhotoDate = exifDate instanceof Date ? exifDate.toISOString() : exifDate;
+      }
+    }
+  } catch (e) {
+    console.error('Erro ao ler EXIF:', e.message);
+  }
+
+  // Fallback: GPS enviado pelo frontend (extraido do HEIC antes da conversao para JPEG)
+  if (!gps && req.body.gpsLat && req.body.gpsLng) {
+    const lat = parseFloat(req.body.gpsLat);
+    const lng = parseFloat(req.body.gpsLng);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      gps = { lat, lng };
+      console.log('GPS via frontend (HEIC):', gps);
+    }
+  }
+
+  console.log('GPS final:', gps);
+
+  const photoDate = resolvedPhotoDate || new Date().toISOString();
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  try {
+    // sharp aceita HEIC nativamente (requer libheif instalado no sistema)
+    const processedBuffer = await sharp(req.file.buffer, { failOn: 'none' })
       .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 85 })
       .toBuffer();
@@ -435,7 +484,7 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
       photoDate: new Date(photoDate),
       summary,
       location,
-      gps: null,
+      gps,                              // ← coordenadas extraídas do EXIF original
       uploadedBy: req.session.user.username,
     };
 

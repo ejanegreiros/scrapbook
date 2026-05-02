@@ -11,6 +11,7 @@
   <title>Scrapbook World Cruise</title>
   <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Scrapbook World Cruise">
@@ -357,10 +358,36 @@
   </div>
 </div>
 
+<!-- Modal: mapa GPS -->
+<div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:580px">
+    <div class="modal-content" style="border-radius:1.5rem;overflow:hidden;">
+      <div class="modal-header border-0 pb-0 px-4 pt-3">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" id="mapModalLabel">📍 Localização</h5>
+          <small class="text-muted" id="map-coords-label"></small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body p-0 mt-3">
+        <div id="map-leaflet" style="width:100%;height:380px;"></div>
+      </div>
+      <div class="modal-footer border-0 px-4 py-3 d-flex justify-content-between align-items-center">
+        <small class="text-muted" id="map-location-label"></small>
+        <a id="map-open-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-rounded">
+          🗺️ Abrir no mapa
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
   if ("serviceWorker" in navigator) {
@@ -899,12 +926,26 @@ async function handleUpload(event) {
   overlay.classList.add('active');
   try {
     const originalFile = fileInput.files[0];
+    const isHeic = originalFile.type === 'image/heic' || originalFile.name.toLowerCase().endsWith('.heic');
+
+    // Para HEIC: extrai GPS antes de converter (a conversao remove metadados)
+    let heicGps = null;
+    if (isHeic) {
+      heicGps = await extractHeicGps(originalFile);
+      console.log('GPS extraido do HEIC no frontend:', heicGps);
+    }
+
+    // Converte HEIC para JPEG no frontend (sharp no servidor nao suporta HEIC)
     const file = await convertHeicIfNeeded(originalFile);
     const formData = new FormData();
     formData.append('photo', file);
     formData.append('summary', form.querySelector('input[name="summary"]').value || '');
     formData.append('location', form.querySelector('input[name="location"]').value || '');
     formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
+    if (heicGps?.lat && heicGps?.lng) {
+      formData.append('gpsLat', heicGps.lat);
+      formData.append('gpsLng', heicGps.lng);
+    }
     const res = await fetch('/upload', { method: 'POST', body: formData });
     if (res.ok) { form.reset(); loadImages(); resetUploadArea(); }
     else { alert(t('upload.errorMsg')); }
@@ -1071,17 +1112,20 @@ async function renderGallery(images) {
     column.appendChild(post);
     gallery.appendChild(column);
 
-    // EXIF async
-    const meta   = await extractImageMetadata(img.url);
+    // EXIF async — apenas para data (GPS agora vem do servidor via img.gps)
     const titleEl  = document.getElementById(`title-${safeId}`);
     const coordsEl = document.getElementById(`coords-${safeId}`);
 
     let dateValue = t('gallery.dateUnavailable');
     if (img.photoDate) {
       dateValue = formatExifDate(img.photoDate);
-    } else if (meta) {
-      const exifDate = meta.DateTimeOriginal || meta.DateTime || meta.DateTimeDigitized;
-      if (exifDate) dateValue = formatExifDate(exifDate);
+    } else {
+      // tenta ler data EXIF da imagem como fallback
+      const meta = await extractImageMetadata(img.url);
+      if (meta) {
+        const exifDate = meta.DateTimeOriginal || meta.DateTime || meta.DateTimeDigitized;
+        if (exifDate) dateValue = formatExifDate(exifDate);
+      }
     }
 
     if (titleEl) {
@@ -1092,15 +1136,66 @@ async function renderGallery(images) {
         </div>`;
     }
 
-    if (meta) {
-      const lat = convertDMSToDD(meta.GPSLatitude, meta.GPSLatitudeRef);
-      const lng = convertDMSToDD(meta.GPSLongitude, meta.GPSLongitudeRef);
-      if (coordsEl) coordsEl.textContent = `${t('gallery.coords')} ${lat && lng ? `${lat}, ${lng}` : t('gallery.coordsNA')}`;
-    } else {
-      if (coordsEl) coordsEl.textContent = t('gallery.coordsUnavailable');
+    // Coordenadas: usa img.gps salvo no servidor (fonte confiável)
+    if (coordsEl) {
+      if (img.gps?.lat != null && img.gps?.lng != null) {
+        coordsEl.style.cursor = 'pointer';
+        coordsEl.title = 'Clique para ver no mapa';
+        coordsEl.innerHTML = `
+          <span style="color:#6366f1;font-weight:600;">📍 ${t('gallery.coords')}</span>
+          <span style="font-family:monospace;">${img.gps.lat}, ${img.gps.lng}</span>
+          <span style="float:right;font-size:0.75rem;color:#6366f1;">ver mapa ↗</span>
+        `;
+        coordsEl.addEventListener('click', () => openMapModal(img.gps.lat, img.gps.lng, img.location));
+      } else {
+        coordsEl.textContent = t('gallery.coordsUnavailable');
+      }
     }
   });
 }
+
+// ─── Map modal ───────────────────────────────────────────────────────────────
+const mapModalEl = document.getElementById('mapModal');
+const mapModal   = new bootstrap.Modal(mapModalEl);
+
+let leafletMap = null;
+let leafletMarker = null;
+
+function openMapModal(lat, lng, location) {
+  const coordsLabel   = document.getElementById('map-coords-label');
+  const locationLabel = document.getElementById('map-location-label');
+  const openLink      = document.getElementById('map-open-link');
+
+  coordsLabel.textContent  = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+  locationLabel.textContent = location || '';
+  openLink.href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
+
+  mapModal.show();
+
+  // Leaflet precisa ser inicializado apos o modal estar visivel
+  mapModalEl.addEventListener('shown.bs.modal', function initMap() {
+    mapModalEl.removeEventListener('shown.bs.modal', initMap);
+
+    if (leafletMap) {
+      leafletMap.remove();
+      leafletMap = null;
+    }
+
+    leafletMap = L.map('map-leaflet').setView([lat, lng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+
+    leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
+    if (location) leafletMarker.bindPopup(`<b>${location}</b>`).openPopup();
+  }, { once: true });
+}
+
+mapModalEl.addEventListener('hidden.bs.modal', () => {
+  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
+});
 
 // ─── Comments section builder ─────────────────────────────────────────────────
 function buildCommentsSection(imageKey, safeId) {
@@ -1366,6 +1461,24 @@ function resetUploadArea() {
   preview.style.display = 'none'; placeholder.style.display = 'block';
   uploadArea.classList.remove('dragover');
 }
+// Extrai GPS do arquivo original (HEIC ou JPEG) usando exifr no browser
+async function extractHeicGps(file) {
+  try {
+    const result = await exifr.gps(file);
+    console.log('exifr.gps result:', result);
+    if (result?.latitude != null && result?.longitude != null) {
+      return {
+        lat: parseFloat(result.latitude.toFixed(6)),
+        lng: parseFloat(result.longitude.toFixed(6)),
+      };
+    }
+    return null;
+  } catch (e) {
+    console.warn('Erro ao extrair GPS:', e);
+    return null;
+  }
+}
+
 async function convertHeicIfNeeded(file) {
   if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
     const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
