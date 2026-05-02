@@ -209,6 +209,7 @@
           <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('de'); return false;">🇩🇪 <span>Deutsch</span></a></li>
           <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('es'); return false;">🇪🇸 <span>Español</span></a></li>
           <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('fr'); return false;">🇫🇷 <span>Français</span></a></li>
+          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('it'); return false;">🇮🇹 <span>Italiano</span></a></li>
         </ul>
       </div>
 
@@ -779,6 +780,76 @@ const translations = {
     'comment.roleAnonymous': 'Visiteur',
     'modal.title': 'Visualisation de l\'image',
     'modal.hint': 'Cliquez à l\'extérieur ou utilisez le bouton de fermeture.',
+  },
+  it: {
+    flag: '🇮🇹',
+    brand: '📸 Scrapbook World Cruise 2026',
+    'nav.home': 'Home',
+    'nav.newImage': 'Nuova immagine',
+    'nav.login': 'Accesso',
+    'nav.ddLogin': '🔐 Accedi',
+    'nav.ddLogout': '🚪 Esci',
+    'hero.title': 'Scrapbook World Cruise Crew',
+    'hero.p1': 'Attraversare gli oceani è molto più che collezionare timbri sul passaporto; si tratta dei legami che si ancorano nel nostro cuore. Il nostro viaggio nel World Cruise è stato un mosaico di culture, sapori e sorrisi condivisi.',
+    'hero.p2': 'Ai nuovi amici e all’impeccabile squadra che ha trasformato la nave nella nostra casa: grazie di cuore! Non solo avete curato ogni dettaglio, ma avete dato un’anima alle nostre giornate in mare aperto, rendendo tutto più gioioso.',
+    'hero.p3': 'Lasciamo il nostro messaggio a chi ci ha accolto con eccellenza.',
+    'login.title': 'Accedi',
+    'login.subtitle': 'Accedi per caricare e vedere le tue foto.',
+    'login.userPlaceholder': 'Utente',
+    'login.passPlaceholder': 'Password',
+    'login.btn': 'Accedi',
+    'login.btnLoading': 'Accesso in corso…',
+    'login.errorMsg': 'Errore di accesso.',
+    'login.connectedAs': 'Connesso come',
+    'login.logoutBtn': 'Esci',
+    'upload.title': 'Carica immagine',
+    'upload.drag': 'Trascina la tua immagine qui',
+    'upload.dragSub': 'o clicca per selezionare',
+    'upload.removeBtn': 'Rimuovi',
+    'upload.datePlaceholder': 'Data della foto',
+    'upload.locationPlaceholder': 'Luogo (es: Spiaggia di Copacabana)',
+    'upload.summaryPlaceholder': 'Descrizione dell’immagine',
+    'upload.btn': 'Invia immagine',
+    'upload.sending': 'Caricamento immagine…',
+    'upload.successToast': '✅ Immagine inviata con successo!',
+    'upload.errorMsg': 'Errore durante l’invio dell’immagine.',
+    'upload.errorHeic': 'Errore durante l’elaborazione dell’immagine HEIC.',
+    'gallery.title': 'Galleria',
+    'gallery.subtitle': 'Visualizza le immagini caricate e lascia un commento.',
+    'gallery.empty': 'Nessuna immagine trovata.',
+    'gallery.filterAll': 'Tutti',
+    'gallery.noLocation': 'Luogo non specificato',
+    'gallery.noDescription': 'Nessuna descrizione',
+    'gallery.coords': 'Coordinate:',
+    'gallery.coordsNA': 'N/D',
+    'gallery.coordsUnavailable': 'Coordinate: non disponibili',
+    'gallery.coordsLoading': 'Coordinate: caricamento...',
+    'gallery.dateLoading': 'caricamento data...',
+    'gallery.dateUnavailable': 'non disponibile',
+    'gallery.uploadedBy': 'Caricato da:',
+    'gallery.viewBtn': 'Visualizza',
+    'gallery.deleteBtn': 'Elimina',
+    'gallery.deleteConfirm': 'Vuoi davvero eliminare questa immagine?',
+    'gallery.memory': 'Ricordo',
+    'comment.toggle': 'Commenti',
+    'comment.singular': 'commento',
+    'comment.plural': 'commenti',
+    'comment.loading': 'Caricamento…',
+    'comment.none': 'Nessun commento ancora.',
+    'comment.error': 'Errore nel caricamento dei commenti.',
+    'comment.placeholder': 'Scrivi il tuo commento…',
+    'comment.namePlaceholder': 'Il tuo nome *',
+    'comment.emailPlaceholder': 'La tua e-mail *',
+    'comment.btn': 'Invia',
+    'comment.anonAlert': 'Inserisci il tuo nome e la tua e-mail per commentare.',
+    'comment.sendError': 'Errore durante l’invio del commento.',
+    'comment.deleteConfirm': 'Eliminare questo commento?',
+    'comment.roleAdmin': 'Admin',
+    'comment.roleViewer': 'Spettatore',
+    'comment.roleCommenter': 'Commentatore',
+    'comment.roleAnonymous': 'Ospite',
+    'modal.title': 'Visualizzazione immagine',
+    'modal.hint': 'Clicca fuori o usa il pulsante di chiusura.',
   },
 };
 
@@ -1422,7 +1493,7 @@ async function loadComments(imageKey, safeId) {
 
       const roleLabel = roleLabels[c.authorRole] || c.authorRole;
 
-      const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' }[currentLang] || 'pt-BR';
+      const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' }[currentLang] || 'pt-BR';
       const date = new Date(c.createdAt).toLocaleDateString(locale, {
         day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
       });
@@ -1500,7 +1571,7 @@ function formatExifDate(dateStr) {
   try {
     const d = new Date(dateStr);
     if (isNaN(d)) return dateStr;
-    const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR' }[currentLang] || 'pt-BR';
+    const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' }[currentLang] || 'pt-BR';
     return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch { return dateStr; }
 }
