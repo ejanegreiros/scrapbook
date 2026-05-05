@@ -405,6 +405,41 @@
   </div>
 </div>
 
+<!-- Modal: editar imagem -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:500px">
+    <div class="modal-content" style="border-radius:1.5rem;">
+      <div class="modal-header border-0 px-4 pt-4 pb-0">
+        <h5 class="modal-title fw-bold" data-i18n="gallery.editTitle">Editar imagem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-0">
+        <input type="hidden" id="edit-key">
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.locationPlaceholder">Localização</label>
+          <input type="text" id="edit-location" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.summaryPlaceholder">Descrição</label>
+          <textarea id="edit-summary" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.datePlaceholder">Data da foto</label>
+          <input type="date" id="edit-date" class="form-control" />
+        </div>
+        <div class="form-check form-switch d-flex align-items-center gap-2 p-3 rounded-3 mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
+          <input class="form-check-input ms-0" type="checkbox" id="edit-private" style="width:2.5rem;height:1.3rem;cursor:pointer;">
+          <label class="form-check-label fw-semibold text-secondary" for="edit-private" data-i18n="upload.privateLabel">Imagem privada</label>
+        </div>
+      </div>
+      <div class="modal-footer border-0 px-4 pb-4">
+        <button class="btn btn-outline-secondary btn-rounded" data-bs-dismiss="modal" data-i18n="gallery.editCancel">Cancelar</button>
+        <button class="btn btn-primary btn-rounded" id="edit-save-btn" data-i18n="gallery.editSave">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: mapa GPS -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:580px">
@@ -494,6 +529,13 @@ const translations = {
     'gallery.uploadedBy': 'Enviado por:',
     'gallery.viewBtn': 'Exibir',
     'gallery.deleteBtn': 'Excluir',
+    'gallery.editBtn': 'Editar',
+    'gallery.editTitle': 'Editar imagem',
+    'gallery.editSave': 'Salvar',
+    'gallery.editCancel': 'Cancelar',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Salvar',
+    'comment.editCancel': 'Cancelar',
     'gallery.deleteConfirm': 'Deseja realmente excluir esta imagem?',
     'gallery.memory': 'Memória',
     'comment.toggle': 'Comentários',
@@ -566,6 +608,13 @@ const translations = {
     'gallery.uploadedBy': 'Uploaded by:',
     'gallery.viewBtn': 'View',
     'gallery.deleteBtn': 'Delete',
+    'gallery.editBtn': 'Edit',
+    'gallery.editTitle': 'Edit image',
+    'gallery.editSave': 'Save',
+    'gallery.editCancel': 'Cancel',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Save',
+    'comment.editCancel': 'Cancel',
     'gallery.deleteConfirm': 'Are you sure you want to delete this image?',
     'gallery.memory': 'Memory',
     'comment.toggle': 'Comments',
@@ -638,6 +687,13 @@ const translations = {
     'gallery.uploadedBy': 'Hochgeladen von:',
     'gallery.viewBtn': 'Anzeigen',
     'gallery.deleteBtn': 'Löschen',
+    'gallery.editBtn': 'Bearbeiten',
+    'gallery.editTitle': 'Bild bearbeiten',
+    'gallery.editSave': 'Speichern',
+    'gallery.editCancel': 'Abbrechen',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Speichern',
+    'comment.editCancel': 'Abbrechen',
     'gallery.deleteConfirm': 'Möchten Sie dieses Bild wirklich löschen?',
     'gallery.memory': 'Erinnerung',
     'comment.toggle': 'Kommentare',
@@ -710,6 +766,13 @@ const translations = {
     'gallery.uploadedBy': 'Subido por:',
     'gallery.viewBtn': 'Ver',
     'gallery.deleteBtn': 'Eliminar',
+    'gallery.editBtn': 'Editar',
+    'gallery.editTitle': 'Editar imagen',
+    'gallery.editSave': 'Guardar',
+    'gallery.editCancel': 'Cancelar',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Guardar',
+    'comment.editCancel': 'Cancelar',
     'gallery.deleteConfirm': '¿Desea realmente eliminar esta imagen?',
     'gallery.memory': 'Recuerdo',
     'comment.toggle': 'Comentarios',
@@ -782,6 +845,13 @@ const translations = {
     'gallery.uploadedBy': 'Envoyé par :',
     'gallery.viewBtn': 'Afficher',
     'gallery.deleteBtn': 'Supprimer',
+    'gallery.editBtn': 'Modifier',
+    'gallery.editTitle': "Modifier l'image",
+    'gallery.editSave': 'Enregistrer',
+    'gallery.editCancel': 'Annuler',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Enregistrer',
+    'comment.editCancel': 'Annuler',
     'gallery.deleteConfirm': 'Voulez-vous vraiment supprimer cette image ?',
     'gallery.memory': 'Souvenir',
     'comment.toggle': 'Commentaires',
@@ -854,6 +924,13 @@ const translations = {
     'gallery.uploadedBy': 'Caricato da:',
     'gallery.viewBtn': 'Visualizza',
     'gallery.deleteBtn': 'Elimina',
+    'gallery.editBtn': 'Modifica',
+    'gallery.editTitle': 'Modifica immagine',
+    'gallery.editSave': 'Salva',
+    'gallery.editCancel': 'Annulla',
+    'comment.editBtn': '✏️',
+    'comment.editSave': 'Salva',
+    'comment.editCancel': 'Annulla',
     'gallery.deleteConfirm': 'Vuoi davvero eliminare questa immagine?',
     'gallery.memory': 'Ricordo',
     'comment.toggle': 'Commenti',
@@ -1254,6 +1331,12 @@ async function renderGallery(images) {
 
     const isAdmin = currentUser?.role === 'admin';
     if (isAdmin) {
+      const editButton = document.createElement('button');
+      editButton.className = 'btn btn-outline-secondary btn-sm me-1';
+      editButton.textContent = t('gallery.editBtn');
+      editButton.addEventListener('click', e => { e.stopPropagation(); openEditModal(img); });
+      footer.appendChild(editButton);
+
       const deleteButton = document.createElement('button');
       deleteButton.className = 'btn btn-outline-danger btn-sm';
       deleteButton.textContent = t('gallery.deleteBtn');
@@ -1316,6 +1399,41 @@ async function renderGallery(images) {
     }
   });
 }
+
+// Edit modal
+const editModalEl = document.getElementById('editModal');
+const editModal   = new bootstrap.Modal(editModalEl);
+
+function openEditModal(img) {
+  document.getElementById('edit-key').value      = img.key;
+  document.getElementById('edit-location').value = img.location || '';
+  document.getElementById('edit-summary').value  = img.summary  || '';
+  document.getElementById('edit-private').checked = !!img.private;
+  const d = img.photoDate ? new Date(img.photoDate) : null;
+  document.getElementById('edit-date').value = d ? d.toISOString().slice(0,10) : '';
+  editModal.show();
+}
+
+document.getElementById('edit-save-btn').addEventListener('click', async () => {
+  const key       = document.getElementById('edit-key').value;
+  const location  = document.getElementById('edit-location').value;
+  const summary   = document.getElementById('edit-summary').value;
+  const photoDate = document.getElementById('edit-date').value;
+  const priv      = document.getElementById('edit-private').checked;
+
+  const res = await fetch('/images', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key, location, summary, photoDate, private: priv }),
+  });
+
+  if (res.ok) {
+    editModal.hide();
+    await loadImages();
+  } else {
+    alert('Erro ao salvar alteracoes.');
+  }
+});
 
 // ─── QR Code modal ───────────────────────────────────────────────────────────
 async function showQrModal() {
@@ -1573,20 +1691,75 @@ async function loadComments(imageKey, safeId) {
       `;
 
       if (currentUser?.role === 'admin') {
+        const adminBtns = document.createElement('div');
+        adminBtns.style.cssText = 'display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9;';
+
+        // Botao editar comentario
+        const editCBtn = document.createElement('button');
+        editCBtn.style.cssText = 'background:none;border:none;padding:0 4px;font-size:.78rem;color:#6366f1;cursor:pointer;font-weight:600;';
+        editCBtn.textContent = '✏️ Editar';
+        editCBtn.title = 'Editar';
+        editCBtn.addEventListener('click', () => {
+          const textEl = item.querySelector('.comment-text');
+          if (item.querySelector('.comment-edit-area')) return;
+          const area = document.createElement('textarea');
+          area.className = 'form-control comment-edit-area mt-2';
+          area.style.cssText = 'font-size:.85rem;border-radius:.5rem;';
+          area.rows = 3;
+          area.value = c.text;
+          const saveBtn2 = document.createElement('button');
+          saveBtn2.className = 'btn btn-primary btn-sm mt-1 me-1';
+          saveBtn2.textContent = t('comment.editSave');
+          const cancelBtn2 = document.createElement('button');
+          cancelBtn2.className = 'btn btn-outline-secondary btn-sm mt-1';
+          cancelBtn2.textContent = t('comment.editCancel');
+          textEl.style.display = 'none';
+          adminBtns.style.display = 'none';
+          item.appendChild(area);
+          item.appendChild(saveBtn2);
+          item.appendChild(cancelBtn2);
+          cancelBtn2.addEventListener('click', () => {
+            area.remove(); saveBtn2.remove(); cancelBtn2.remove();
+            textEl.style.display = '';
+            adminBtns.style.display = 'flex';
+          });
+          saveBtn2.addEventListener('click', async () => {
+            const newText = area.value.trim();
+            if (!newText) return;
+            const res = await fetch(`/comments/${c._id || c.id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: newText }),
+            });
+            if (res.ok) {
+              c.text = newText;
+              textEl.textContent = newText;
+              area.remove(); saveBtn2.remove(); cancelBtn2.remove();
+              textEl.style.display = '';
+              adminBtns.style.display = 'flex';
+            }
+          });
+        });
+        adminBtns.appendChild(editCBtn);
+
+        // Botao excluir comentario
+        const sep = document.createElement('span');
+        sep.style.cssText = 'color:#cbd5e1;font-size:.78rem;align-self:center;';
+        sep.textContent = '|';
+        adminBtns.appendChild(sep);
+
         const delBtn = document.createElement('button');
-        delBtn.className = 'comment-delete-btn';
-        delBtn.style.display = 'block';
-        delBtn.textContent = '✕';
-        delBtn.title = t('gallery.deleteBtn');
+        delBtn.style.cssText = 'background:none;border:none;padding:0 4px;font-size:.78rem;color:#ef4444;cursor:pointer;font-weight:600;';
+        delBtn.textContent = '✕ Excluir';
         delBtn.addEventListener('click', async () => {
           if (!confirm(t('comment.deleteConfirm'))) return;
           await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
-          // Atualiza contagem local e re-renderiza galeria
           if (commentCountsCache[imageKey] > 0) commentCountsCache[imageKey]--;
           await loadComments(imageKey, safeId);
           renderGallery(imagesCache);
         });
-        item.appendChild(delBtn);
+        adminBtns.appendChild(delBtn);
+        item.appendChild(adminBtns);
       }
 
       list.appendChild(item);

@@ -517,6 +517,40 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
   }
 });
 
+// ─── Editar imagem (admin only) ──────────────────────────────────────────────
+app.patch('/images', ensureAdmin, async (req, res) => {
+  const { key, summary, location, photoDate, private: priv } = req.body;
+  if (!key) return res.status(400).json({ error: 'key obrigatoria' });
+  try {
+    const update = {};
+    if (summary  !== undefined) update.summary   = summary.trim();
+    if (location !== undefined) update.location  = location.trim();
+    if (photoDate !== undefined && photoDate) update.photoDate = new Date(photoDate);
+    if (priv     !== undefined) update.private   = priv === true || priv === 'true';
+    await imageCollection.updateOne({ key }, { $set: update });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao atualizar imagem' });
+  }
+});
+
+// ─── Editar comentário (admin only) ──────────────────────────────────────────
+app.patch('/comments/:id', ensureAdmin, async (req, res) => {
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'Texto obrigatorio' });
+  try {
+    await commentsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { text: text.trim(), editedAt: new Date() } }
+    );
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao atualizar comentario' });
+  }
+});
+
 app.delete('/images', ensureSignedIn, async (req, res) => {
   const key = req.query.key;
   if (!key) return res.status(400).json({ error: 'Chave da imagem obrigatória' });
