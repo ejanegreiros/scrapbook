@@ -323,10 +323,10 @@
     <hr class="my-3">
     <div class="d-flex align-items-center justify-content-between">
       <div>
-        <p class="fw-semibold mb-0">🔗 Acesso por QR Code</p>
-        <small class="text-muted">Compartilhe com visitantes para acesso direto</small>
+        <p class="fw-semibold mb-0" data-i18n="qr.title">🔗 Acesso por QR Code</p>
+        <small class="text-muted" data-i18n="qr.subtitle">Compartilhe com visitantes para acesso direto</small>
       </div>
-      <button class="btn btn-outline-primary btn-sm btn-rounded" onclick="showQrModal()">Gerar QR Code</button>
+      <button class="btn btn-outline-primary btn-sm btn-rounded" onclick="showQrModal()" data-i18n="qr.btn">Gerar QR Code</button>
     </div>
   </div>
 
@@ -335,17 +335,17 @@
     <div class="modal-dialog modal-dialog-centered" style="max-width:380px">
       <div class="modal-content" style="border-radius:1.5rem;">
         <div class="modal-header border-0 pb-0 px-4 pt-4">
-          <h5 class="modal-title fw-bold">📱 QR Code de Acesso</h5>
+          <h5 class="modal-title fw-bold" data-i18n="qr.modalTitle">📱 QR Code de Acesso</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body text-center px-4 pb-4">
-          <p class="text-muted small mb-3">Escaneie para entrar como visitante</p>
+          <p class="text-muted small mb-3" data-i18n="qr.modalSub">Escaneie para entrar como visitante</p>
           <div class="d-flex justify-content-center mb-3">
             <div id="qr-canvas" style="border-radius:1rem;padding:12px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);display:inline-block;"></div>
           </div>
           <div class="input-group input-group-sm">
             <input type="text" id="qr-url-input" class="form-control" readonly style="font-size:.75rem;">
-            <button class="btn btn-outline-secondary" onclick="copyQrUrl()">Copiar</button>
+            <button class="btn btn-outline-secondary" onclick="copyQrUrl()" data-i18n="qr.copy">Copiar</button>
           </div>
         </div>
       </div>
@@ -446,7 +446,7 @@
     <div class="modal-content" style="border-radius:1.5rem;overflow:hidden;">
       <div class="modal-header border-0 pb-0 px-4 pt-3">
         <div>
-          <h5 class="modal-title fw-bold mb-0" id="mapModalLabel">📍 Localização</h5>
+          <h5 class="modal-title fw-bold mb-0" id="mapModalLabel" data-i18n="map.title">📍 Localização</h5>
           <small class="text-muted" id="map-coords-label"></small>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
@@ -457,7 +457,7 @@
       <div class="modal-footer border-0 px-4 py-3 d-flex justify-content-between align-items-center">
         <small class="text-muted" id="map-location-label"></small>
         <a id="map-open-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-rounded">
-          🗺️ Abrir no mapa
+          <span data-i18n="map.openLink">🗺️ Abrir no mapa</span>
         </a>
       </div>
     </div>
@@ -559,6 +559,18 @@ const translations = {
     'modal.hint': 'Clique fora ou use o botão de fechar.',
     'upload.privateLabel': 'Publicar somente para mim (imagem privada)',
     'upload.privateBadge': '🔒 Privado',
+    'qr.title': '🔗 Acesso por QR Code',
+    'qr.subtitle': 'Compartilhe com visitantes para acesso direto',
+    'qr.btn': 'Gerar QR Code',
+    'qr.modalTitle': '📱 QR Code de Acesso',
+    'qr.modalSub': 'Escaneie para entrar como visitante',
+    'qr.copy': 'Copiar',
+    'qr.copied': 'Copiado!',
+    'qr.keyMissing': 'QR_ACCESS_KEY não configurada no .env do servidor.',
+    'qr.fetchError': 'Erro ao buscar chave QR',
+    'map.title': '📍 Localização',
+    'map.openLink': '🗺️ Abrir no mapa',
+    'edit.saveError': 'Erro ao salvar alterações.',
   },
   en: {
     flag: '🇺🇸',
@@ -638,6 +650,18 @@ const translations = {
     'modal.hint': 'Click outside or use the close button.',
     'upload.privateLabel': 'Post only for me (private image)',
     'upload.privateBadge': '🔒 Private',
+    'qr.title': '🔗 QR Code Access',
+    'qr.subtitle': 'Share with visitors for direct access',
+    'qr.btn': 'Generate QR Code',
+    'qr.modalTitle': '📱 Access QR Code',
+    'qr.modalSub': 'Scan to log in as a visitor',
+    'qr.copy': 'Copy',
+    'qr.copied': 'Copied!',
+    'qr.keyMissing': 'QR_ACCESS_KEY not configured in server .env.',
+    'qr.fetchError': 'Error fetching QR key',
+    'map.title': '📍 Location',
+    'map.openLink': '🗺️ Open in map',
+    'edit.saveError': 'Error saving changes.',
   },
   de: {
     flag: '🇩🇪',
@@ -717,6 +741,18 @@ const translations = {
     'modal.hint': 'Klicken Sie außerhalb oder verwenden Sie die Schaltfläche zum Schließen.',
     'upload.privateLabel': 'Nur für mich veröffentlichen (privates Bild)',
     'upload.privateBadge': '🔒 Privat',
+    'qr.title': '🔗 QR-Code-Zugang',
+    'qr.subtitle': 'Mit Besuchern teilen für direkten Zugang',
+    'qr.btn': 'QR-Code generieren',
+    'qr.modalTitle': '📱 Zugangs-QR-Code',
+    'qr.modalSub': 'Scannen zum Einloggen als Besucher',
+    'qr.copy': 'Kopieren',
+    'qr.copied': 'Kopiert!',
+    'qr.keyMissing': 'QR_ACCESS_KEY nicht in .env konfiguriert.',
+    'qr.fetchError': 'Fehler beim Abrufen des QR-Schlüssels',
+    'map.title': '📍 Standort',
+    'map.openLink': '🗺️ In Karte öffnen',
+    'edit.saveError': 'Fehler beim Speichern der Änderungen.',
   },
   es: {
     flag: '🇪🇸',
@@ -796,6 +832,18 @@ const translations = {
     'modal.hint': 'Haz clic fuera o usa el botón de cerrar.',
     'upload.privateLabel': 'Publicar solo para mí (imagen privada)',
     'upload.privateBadge': '🔒 Privado',
+    'qr.title': '🔗 Acceso por código QR',
+    'qr.subtitle': 'Comparte con visitantes para acceso directo',
+    'qr.btn': 'Generar QR',
+    'qr.modalTitle': '📱 Código QR de acceso',
+    'qr.modalSub': 'Escanea para entrar como visitante',
+    'qr.copy': 'Copiar',
+    'qr.copied': '¡Copiado!',
+    'qr.keyMissing': 'QR_ACCESS_KEY no configurada en el .env del servidor.',
+    'qr.fetchError': 'Error al obtener clave QR',
+    'map.title': '📍 Ubicación',
+    'map.openLink': '🗺️ Abrir en mapa',
+    'edit.saveError': 'Error al guardar cambios.',
   },
   fr: {
     flag: '🇫🇷',
@@ -875,6 +923,18 @@ const translations = {
     'modal.hint': 'Cliquez à l\'extérieur ou utilisez le bouton de fermeture.',
     'upload.privateLabel': 'Publier uniquement pour moi (image privée)',
     'upload.privateBadge': '🔒 Privé',
+    'qr.title': '🔗 Accès par QR Code',
+    'qr.subtitle': 'Partagez avec les visiteurs pour un accès direct',
+    'qr.btn': 'Générer le QR Code',
+    'qr.modalTitle': '📱 QR Code d’accès',
+    'qr.modalSub': 'Scannez pour vous connecter en tant que visiteur',
+    'qr.copy': 'Copier',
+    'qr.copied': 'Copié !',
+    'qr.keyMissing': 'QR_ACCESS_KEY non configurée dans le .env du serveur.',
+    'qr.fetchError': 'Erreur lors de la récupération de la clé QR',
+    'map.title': '📍 Localisation',
+    'map.openLink': '🗺️ Ouvrir dans la carte',
+    'edit.saveError': 'Erreur lors de l’enregistrement des modifications.',
   },
   it: {
     flag: '🇮🇹',
@@ -954,6 +1014,18 @@ const translations = {
     'modal.hint': 'Clicca fuori o usa il pulsante di chiusura.',
     'upload.privateLabel': 'Pubblica solo per me (immagine privata)',
     'upload.privateBadge': '🔒 Privato',
+    'qr.title': '🔗 Accesso tramite QR Code',
+    'qr.subtitle': 'Condividi con i visitatori per accesso diretto',
+    'qr.btn': 'Genera QR Code',
+    'qr.modalTitle': '📱 QR Code di accesso',
+    'qr.modalSub': 'Scannerizza per accedere come visitatore',
+    'qr.copy': 'Copia',
+    'qr.copied': 'Copiato!',
+    'qr.keyMissing': 'QR_ACCESS_KEY non configurata nel .env del server.',
+    'qr.fetchError': 'Errore nel recupero della chiave QR',
+    'map.title': '📍 Posizione',
+    'map.openLink': '🗺️ Apri nella mappa',
+    'edit.saveError': 'Errore nel salvataggio delle modifiche.',
   },
 };
 
@@ -1431,7 +1503,7 @@ document.getElementById('edit-save-btn').addEventListener('click', async () => {
     editModal.hide();
     await loadImages();
   } else {
-    alert('Erro ao salvar alteracoes.');
+    alert(t('edit.saveError'));
   }
 });
 
@@ -1441,7 +1513,7 @@ async function showQrModal() {
     const res  = await fetch('/qr-key');
     const data = await res.json();
     if (!res.ok || !data.key) {
-      alert('QR_ACCESS_KEY nao configurada no .env do servidor.');
+      alert(t('qr.keyMissing'));
       return;
     }
 
@@ -1463,7 +1535,7 @@ async function showQrModal() {
 
     new bootstrap.Modal(document.getElementById('qrModal')).show();
   } catch (e) {
-    alert('Erro ao buscar chave QR: ' + e.message);
+    alert(t('qr.fetchError') + ': ' + e.message);
   }
 }
 
@@ -1471,8 +1543,8 @@ function copyQrUrl() {
   const input = document.getElementById('qr-url-input');
   navigator.clipboard.writeText(input.value).then(() => {
     const btn = input.nextElementSibling;
-    btn.textContent = 'Copiado!';
-    setTimeout(() => btn.textContent = 'Copiar', 2000);
+    btn.textContent = t('qr.copied');
+    setTimeout(() => btn.textContent = t('qr.copy'), 2000);
   });
 }
 
