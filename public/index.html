@@ -241,7 +241,7 @@
             <p class="text-secondary mb-3" data-i18n="hero.p2">
               Aos novos amigos e a essa equipe impecável que transformou o navio em nossa casa: nosso muito obrigado! Vocês não apenas cuidaram dos detalhes, mas deram alma aos nossos dias em alto-mar, tornando tudo mais divertido.
             </p>
-            <p class="text-secondary mb-0" data-i18n="hero.p3">
+            <p class="text-secondary mb-0 fw-bold" data-i18n="hero.p3">
               Vamos deixar nossa mensagem a quem nos recebeu com excelência.
             </p>
           </div>
@@ -273,17 +273,20 @@
             </div>
             <button id="logout-btn" class="btn btn-outline-secondary btn-sm btn-rounded" data-i18n="login.logoutBtn">Sair</button>
           </div>
-          <div id="stats-panel" class="row g-3 mb-2">
-            <div class="col-6">
-              <div class="p-3 rounded-3 text-center" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
-                <div id="stats-images" class="fw-bold" style="font-size:2rem;color:#7c3aed;line-height:1;">-</div>
-                <div class="text-secondary small mt-1" data-i18n="stats.images">🖼️ Fotos</div>
+          <h2 class="fw-bold mb-3" style="font-size:1.6rem;color:#0f172a;line-height:1.2;" data-i18n="stats.title">Deixe sua mensagem.</h2>
+          <div id="stats-panel" class="d-flex flex-column gap-3">
+            <div class="p-4 rounded-4 d-flex align-items-center gap-4" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+              <div id="stats-images" class="fw-bold" style="font-size:4.5rem;color:#7c3aed;line-height:1;min-width:100px;text-align:center;">-</div>
+              <div>
+                <div id="stats-images-label" class="fw-bold" style="font-size:1.6rem;color:#5b21b6;" data-i18n="stats.images">🖼️ Fotos</div>
+                <div class="mt-1" style="font-size:.85rem;color:#7c3aed;opacity:.75;" data-i18n="stats.imagesSub">disponíveis para visualização</div>
               </div>
             </div>
-            <div class="col-6">
-              <div class="p-3 rounded-3 text-center" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);">
-                <div id="stats-comments" class="fw-bold" style="font-size:2rem;color:#be185d;line-height:1;">-</div>
-                <div class="text-secondary small mt-1" data-i18n="stats.comments">💬 Comentários</div>
+            <div class="p-4 rounded-4 d-flex align-items-center gap-4" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);">
+              <div id="stats-comments" class="fw-bold" style="font-size:4.5rem;color:#16a34a;line-height:1;min-width:100px;text-align:center;">-</div>
+              <div>
+                <div class="fw-bold" style="font-size:1.6rem;color:#15803d;" data-i18n="stats.comments">💬 Comentários</div>
+                <div class="mt-1" style="font-size:.85rem;color:#16a34a;opacity:.75;" data-i18n="stats.commentsSub">elogios e mensagens</div>
               </div>
             </div>
           </div>
@@ -518,6 +521,10 @@ const translations = {
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Sair',
     'stats.images': '🖼️ Fotos',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Deixe sua mensagem.',
+    'stats.imagesSub': 'disponíveis para visualização',
+    'stats.commentsSub': 'elogios e mensagens',
     'stats.comments': '💬 Comentários',
     'upload.title': 'Upload de imagem',
     'upload.drag': 'Arraste sua imagem aqui',
@@ -611,6 +618,10 @@ const translations = {
     'login.connectedAs': 'Signed in as',
     'login.logoutBtn': 'Sign out',
     'stats.images': '🖼️ Photos',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Leave your message.',
+    'stats.imagesSub': 'available to view',
+    'stats.commentsSub': 'compliments and messages',
     'stats.comments': '💬 Comments',
     'upload.title': 'Upload image',
     'upload.drag': 'Drag your image here',
@@ -704,6 +715,10 @@ const translations = {
     'login.connectedAs': 'Angemeldet als',
     'login.logoutBtn': 'Abmelden',
     'stats.images': '🖼️ Fotos',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Hinterlassen Sie Ihre Nachricht.',
+    'stats.imagesSub': 'zum Anzeigen verfügbar',
+    'stats.commentsSub': 'Komplimente und Nachrichten',
     'stats.comments': '💬 Kommentare',
     'upload.title': 'Bild hochladen',
     'upload.drag': 'Bild hierher ziehen',
@@ -797,6 +812,10 @@ const translations = {
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Salir',
     'stats.images': '🖼️ Fotos',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Deja tu mensaje.',
+    'stats.imagesSub': 'disponibles para visualizar',
+    'stats.commentsSub': 'elogios y mensajes',
     'stats.comments': '💬 Comentarios',
     'upload.title': 'Subir imagen',
     'upload.drag': 'Arrastra tu imagen aquí',
@@ -890,6 +909,10 @@ const translations = {
     'login.connectedAs': 'Connecté en tant que',
     'login.logoutBtn': 'Se déconnecter',
     'stats.images': '🖼️ Photos',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Laissez votre message.',
+    'stats.imagesSub': 'disponibles à visualiser',
+    'stats.commentsSub': 'compliments et messages',
     'stats.comments': '💬 Commentaires',
     'upload.title': 'Envoyer une image',
     'upload.drag': 'Faites glisser votre image ici',
@@ -983,6 +1006,10 @@ const translations = {
     'login.connectedAs': 'Connesso come',
     'login.logoutBtn': 'Esci',
     'stats.images': '🖼️ Foto',
+    'stats.members': '👥 Crew Members',
+    'stats.title': 'Lascia il tuo messaggio.',
+    'stats.imagesSub': 'disponibili per la visualizzazione',
+    'stats.commentsSub': 'complimenti e messaggi',
     'stats.comments': '💬 Commenti',
     'upload.title': 'Carica immagine',
     'upload.drag': 'Trascina la tua immagine qui',
@@ -1068,10 +1095,17 @@ async function loadStats() {
     const res  = await fetch('/stats');
     if (!res.ok) return;
     const data = await res.json();
-    const imgEl = document.getElementById('stats-images');
-    const comEl = document.getElementById('stats-comments');
+    const imgEl   = document.getElementById('stats-images');
+    const comEl   = document.getElementById('stats-comments');
+    const lblEl   = document.getElementById('stats-images-label');
     if (imgEl) imgEl.textContent = data.images  ?? '-';
     if (comEl) comEl.textContent = data.comments ?? '-';
+    // Troca label conforme role: admin ve 'Fotos', outros veem 'Crew Members'
+    if (lblEl) {
+      const isAdmin = currentUser?.role === 'admin';
+      lblEl.setAttribute('data-i18n', isAdmin ? 'stats.images' : 'stats.members');
+      lblEl.textContent = isAdmin ? t('stats.images') : t('stats.members');
+    }
     // Animacao de contagem
     [{ el: imgEl, val: data.images }, { el: comEl, val: data.comments }].forEach(({ el, val }) => {
       if (!el || !val) return;
