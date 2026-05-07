@@ -262,6 +262,26 @@ app.delete('/users/:username', ensureAdmin, async (req, res) => {
 });
 
 // ─── Comentários ──────────────────────────────────────────────────────────────
+// ─── Stats (resumo para o painel inicial) ──────────────────────────────
+app.get('/stats', ensureSignedIn, async (req, res) => {
+  try {
+    const sessionUser = req.session.user;
+    let imgQuery = {};
+    if (sessionUser.role === 'admin') {
+      imgQuery = { $or: [ { private: { $ne: true } }, { uploadedBy: sessionUser.username } ] };
+    } else {
+      imgQuery = { private: { $ne: true } };
+    }
+    const [images, comments] = await Promise.all([
+      imageCollection.countDocuments(imgQuery),
+      commentsCollection.countDocuments({}),
+    ]);
+    res.json({ images, comments });
+  } catch (e) {
+    res.status(500).json({ error: 'Erro ao buscar stats' });
+  }
+});
+
 app.get('/comments', ensureSignedIn, async (req, res) => {
   const { imageKey } = req.query;
   if (!imageKey) return res.status(400).json({ error: 'imageKey obrigatório' });

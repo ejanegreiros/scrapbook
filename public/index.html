@@ -266,12 +266,27 @@
           <p id="auth-error" class="text-danger mt-2 mb-1"></p>
         </div>
         <div id="logged-in" style="display:none;">
-          <p class="mb-3">
-            <span data-i18n="login.connectedAs">Conectado como</span>
-            <strong> <span id="current-user"></span></strong>
-            (<span id="current-role"></span>).
-          </p>
-          <button id="logout-btn" class="btn btn-outline-dark btn-rounded" data-i18n="login.logoutBtn">Sair</button>
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+              <p class="mb-0 text-secondary small" data-i18n="login.connectedAs">Conectado como</p>
+              <p class="mb-0 fw-bold fs-5"><span id="current-user"></span> <span class="badge rounded-pill" id="role-badge" style="font-size:.7rem;background:#ede9fe;color:#7c3aed;"><span id="current-role"></span></span></p>
+            </div>
+            <button id="logout-btn" class="btn btn-outline-secondary btn-sm btn-rounded" data-i18n="login.logoutBtn">Sair</button>
+          </div>
+          <div id="stats-panel" class="row g-3 mb-2">
+            <div class="col-6">
+              <div class="p-3 rounded-3 text-center" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+                <div id="stats-images" class="fw-bold" style="font-size:2rem;color:#7c3aed;line-height:1;">-</div>
+                <div class="text-secondary small mt-1" data-i18n="stats.images">🖼️ Fotos</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded-3 text-center" style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);">
+                <div id="stats-comments" class="fw-bold" style="font-size:2rem;color:#be185d;line-height:1;">-</div>
+                <div class="text-secondary small mt-1" data-i18n="stats.comments">💬 Comentários</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -502,6 +517,8 @@ const translations = {
     'login.errorMsg': 'Erro ao fazer login.',
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Sair',
+    'stats.images': '🖼️ Fotos',
+    'stats.comments': '💬 Comentários',
     'upload.title': 'Upload de imagem',
     'upload.drag': 'Arraste sua imagem aqui',
     'upload.dragSub': 'ou clique para selecionar',
@@ -593,6 +610,8 @@ const translations = {
     'login.errorMsg': 'Login error.',
     'login.connectedAs': 'Signed in as',
     'login.logoutBtn': 'Sign out',
+    'stats.images': '🖼️ Photos',
+    'stats.comments': '💬 Comments',
     'upload.title': 'Upload image',
     'upload.drag': 'Drag your image here',
     'upload.dragSub': 'or click to select',
@@ -684,6 +703,8 @@ const translations = {
     'login.errorMsg': 'Anmeldefehler.',
     'login.connectedAs': 'Angemeldet als',
     'login.logoutBtn': 'Abmelden',
+    'stats.images': '🖼️ Fotos',
+    'stats.comments': '💬 Kommentare',
     'upload.title': 'Bild hochladen',
     'upload.drag': 'Bild hierher ziehen',
     'upload.dragSub': 'oder klicken zum Auswählen',
@@ -775,6 +796,8 @@ const translations = {
     'login.errorMsg': 'Error al iniciar sesión.',
     'login.connectedAs': 'Conectado como',
     'login.logoutBtn': 'Salir',
+    'stats.images': '🖼️ Fotos',
+    'stats.comments': '💬 Comentarios',
     'upload.title': 'Subir imagen',
     'upload.drag': 'Arrastra tu imagen aquí',
     'upload.dragSub': 'o haz clic para seleccionar',
@@ -866,6 +889,8 @@ const translations = {
     'login.errorMsg': 'Erreur de connexion.',
     'login.connectedAs': 'Connecté en tant que',
     'login.logoutBtn': 'Se déconnecter',
+    'stats.images': '🖼️ Photos',
+    'stats.comments': '💬 Commentaires',
     'upload.title': 'Envoyer une image',
     'upload.drag': 'Faites glisser votre image ici',
     'upload.dragSub': 'ou cliquez pour sélectionner',
@@ -957,6 +982,8 @@ const translations = {
     'login.errorMsg': 'Errore di accesso.',
     'login.connectedAs': 'Connesso come',
     'login.logoutBtn': 'Esci',
+    'stats.images': '🖼️ Foto',
+    'stats.comments': '💬 Commenti',
     'upload.title': 'Carica immagine',
     'upload.drag': 'Trascina la tua immagine qui',
     'upload.dragSub': 'o clicca per selezionare',
@@ -1033,6 +1060,29 @@ let currentLang = localStorage.getItem('lang') || 'pt';
 
 function t(key) {
   return (translations[currentLang] || translations['pt'])[key] || key;
+}
+
+// Busca e exibe o resumo de imagens e comentarios
+async function loadStats() {
+  try {
+    const res  = await fetch('/stats');
+    if (!res.ok) return;
+    const data = await res.json();
+    const imgEl = document.getElementById('stats-images');
+    const comEl = document.getElementById('stats-comments');
+    if (imgEl) imgEl.textContent = data.images  ?? '-';
+    if (comEl) comEl.textContent = data.comments ?? '-';
+    // Animacao de contagem
+    [{ el: imgEl, val: data.images }, { el: comEl, val: data.comments }].forEach(({ el, val }) => {
+      if (!el || !val) return;
+      let start = 0; const step = Math.ceil(val / 30);
+      const timer = setInterval(() => {
+        start = Math.min(start + step, val);
+        el.textContent = start;
+        if (start >= val) clearInterval(timer);
+      }, 30);
+    });
+  } catch (e) { console.warn('Stats error:', e); }
 }
 
 // Mostra o toggle de imagem privada apenas para admins
@@ -1128,11 +1178,12 @@ function renderAuth() {
     adminActions.style.display = canUpload ? 'block' : 'none';
     document.body.dataset.role = currentUser.role;
     updatePrivateToggleVisibility();
+    loadStats();
 
     const newImageBtn = document.getElementById('new-image-btn');
     if (newImageBtn) newImageBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
 
-    if (authPanel) authPanel.style.display = 'none';
+    if (authPanel) authPanel.style.display = 'block'; // sempre visivel quando logado
 
     labelEl.textContent        = currentUser.username;
     ddLoginItem.style.display  = 'none';
@@ -1159,7 +1210,7 @@ function openUploadArea() {
   if (uploadPanel) { uploadPanel.style.display = 'block'; uploadPanel.scrollIntoView({ behavior: 'smooth' }); }
 }
 function goHome() {
-  if (authPanel) authPanel.style.display = 'none';
+  if (authPanel) authPanel.style.display = currentUser ? 'block' : 'none';
   if (uploadPanel && currentUser?.role !== 'admin') uploadPanel.style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
