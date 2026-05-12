@@ -302,6 +302,43 @@ app.get('/comments', ensureSignedIn, async (req, res) => {
   }
 });
 
+// ─── Ranking de comentários ───────────────────────────────────────────────────
+// Rota estática /comments/counts registrada ANTES de /comments/:id para evitar conflito de rotas.
+app.get('/comments/counts', ensureSignedIn, async (req, res) => {
+  if (!commentsCollection) {
+    return res.status(503).json({ error: 'MongoDB não disponível' });
+  }
+
+  try {
+    const pipeline = [
+      {
+        $group: {
+          _id: '$imageKey',
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          imageKey: '$_id',
+          count: 1,
+        },
+      },
+    ];
+
+    const rows = await commentsCollection.aggregate(pipeline).toArray();
+
+    // Converte array → objeto { [imageKey]: count }
+    const counts = {};
+    rows.forEach(r => { counts[r.imageKey] = r.count; });
+
+    return res.json(counts);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Erro ao calcular ranking' });
+  }
+});
+
 app.post('/comments', ensureCanComment, async (req, res) => {
   const { imageKey, text, name, email } = req.body;
 
@@ -338,6 +375,23 @@ app.post('/comments', ensureCanComment, async (req, res) => {
   }
 });
 
+app.patch('/comments/:id', ensureAdmin, async (req, res) => {
+  const { ObjectId } = require('mongodb');
+  const { text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'Texto obrigatorio' });
+  try {
+    const result = await commentsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { text: text.trim(), editedAt: new Date() } }
+    );
+    if (result.matchedCount === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao atualizar comentario' });
+  }
+});
+
 app.delete('/comments/:id', ensureAdmin, async (req, res) => {
   const { ObjectId } = require('mongodb');
   try {
@@ -347,44 +401,6 @@ app.delete('/comments/:id', ensureAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro ao remover comentário' });
-  }
-});
-
-// ─── Ranking de comentários ───────────────────────────────────────────────────
-// Retorna um map { imageKey -> commentCount } para todas as imagens com ao menos 1 comentário.
-// Acessível a qualquer usuário logado (mesma regra do /comments).
-app.get('/comments/counts', ensureSignedIn, async (req, res) => {
-  if (!commentsCollection) {
-    return res.status(503).json({ error: 'MongoDB não disponível' });
-  }
-
-  try {
-    const pipeline = [
-      {
-        $group: {
-          _id: '$imageKey',
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          imageKey: '$_id',
-          count: 1,
-        },
-      },
-    ];
-
-    const rows = await commentsCollection.aggregate(pipeline).toArray();
-
-    // Converte array → objeto { [imageKey]: count }
-    const counts = {};
-    rows.forEach(r => { counts[r.imageKey] = r.count; });
-
-    return res.json(counts);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Erro ao calcular ranking' });
   }
 });
 
@@ -552,22 +568,6 @@ app.patch('/images', ensureAdmin, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Erro ao atualizar imagem' });
-  }
-});
-
-// ─── Editar comentário (admin only) ──────────────────────────────────────────
-app.patch('/comments/:id', ensureAdmin, async (req, res) => {
-  const { text } = req.body;
-  if (!text?.trim()) return res.status(400).json({ error: 'Texto obrigatorio' });
-  try {
-    await commentsCollection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: { text: text.trim(), editedAt: new Date() } }
-    );
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Erro ao atualizar comentario' });
   }
 });
 

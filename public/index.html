@@ -1890,8 +1890,9 @@ async function loadComments(imageKey, safeId) {
               body: JSON.stringify({ text: newText }),
             });
             if (res.ok) {
-              c.text = newText;
-              textEl.textContent = newText;
+              await loadComments(imageKey, safeId);
+            } else {
+              alert('Erro ao salvar comentário.');
               area.remove(); saveBtn2.remove(); cancelBtn2.remove();
               textEl.style.display = '';
               adminBtns.style.display = 'flex';
@@ -1911,7 +1912,8 @@ async function loadComments(imageKey, safeId) {
         delBtn.textContent = '✕ Excluir';
         delBtn.addEventListener('click', async () => {
           if (!confirm(t('comment.deleteConfirm'))) return;
-          await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
+          const delRes = await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
+          if (!delRes.ok) { alert('Erro ao excluir comentário.'); return; }
           if (commentCountsCache[imageKey] > 0) commentCountsCache[imageKey]--;
           await loadComments(imageKey, safeId);
           renderGallery(imagesCache);
