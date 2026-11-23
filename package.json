@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "thumbs": "node scripts/generate-thumbs.js"
   },
   "keywords": [],
   "author": "",
@@ -13,15 +15,23 @@
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1029.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/inter": "^5.3.0",
     "bcrypt": "^6.0.0",
     "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.2",
     "dotenv": "^17.4.1",
     "exifr": "^7.1.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.5",
     "express-session": "^1.17.3",
+    "flatpickr": "^4.6.13",
     "heic2any": "^0.0.4",
+    "helmet": "^8.3.0",
+    "leaflet": "^1.9.4",
     "mongodb": "^7.1.1",
     "multer": "^1.4.5-lts.1",
+    "qrcodejs": "^1.0.0",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

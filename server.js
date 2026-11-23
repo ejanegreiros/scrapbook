@@ -4,6 +4,9 @@ const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const sharp = require('sharp');
 const exifr = require('exifr');
 const { MongoClient } = require('mongodb');
@@ -15,7 +18,17 @@ const {
 } = require('@aws-sdk/client-s3');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const ok = file.mimetype.startsWith('image/') || /\.hei[cf]$/i.test(file.originalname);
+    cb(ok ? null : new Error('Apenas imagens são permitidas'), ok);
+  },
+});
+const isProd = process.env.NODE_ENV === 'production';
+// Atrás de proxy HTTPS (Render, Railway, Nginx...) defina TRUST_PROXY=1 para o cookie "secure" funcionar
+if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
 const port = process.env.PORT || 3000;
 
 // ─── ✅ ÍCONES APPLE (PWA iOS) ────────────────────────────────────────────────
@@ -43,7 +56,7 @@ const publicUrl =
   process.env.R2_PUBLIC_URL || 'https://pub-1b9f56270eda4c8cbdb655d80c3c2ab0.r2.dev';
 
 // ─── MongoDB ─────────────────────────────────────────────────────────────────
-const mongoClient = new MongoClient(process.env.MONGO_URI || '');
+const mongoClient = new MongoClient(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 5000 });
 const dbName = process.env.MONGO_DB || 'r2_gallery';
 const collectionName = process.env.MONGO_COLLECTION || 'images';
 const usersCollectionName = 'users';
@@ -105,21 +118,95 @@ async function initMongo() {
 }
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
-app.use('/vendor/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist')));
-app.use(express.static('public'));
-app.use(express.json());
+const assetOrigins = ["'self'", 'https://*.r2.dev'];
+try { assetOrigins.push(new URL(publicUrl).origin); } catch { /* publicUrl inválida */ }
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        'default-src': ["'self'"],
+        'script-src': ["'self'"],
+        'style-src': ["'self'", "'unsafe-inline'"],
+        'img-src': [...assetOrigins, 'data:', 'blob:', 'https://*.tile.openstreetmap.org'],
+        'font-src': ["'self'", 'data:'],
+        'connect-src': ["'self'"],
+        'worker-src': ["'self'"],
+        'manifest-src': ["'self'"],
+        'object-src': ["'none'"],
+        'base-uri': ["'self'"],
+        'form-action': ["'self'"],
+        'frame-ancestors': ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// Bibliotecas de front-end servidas localmente (sem CDN): mais rápido, funciona offline e cabe na CSP
+const vendorDirs = {
+  bootstrap: 'bootstrap/dist',
+  'bootstrap-icons': 'bootstrap-icons',
+  leaflet: 'leaflet/dist',
+  flatpickr: 'flatpickr/dist',
+  qrcodejs: 'qrcodejs',
+  exifr: 'exifr/dist',
+  heic2any: 'heic2any/dist',
+  'fontsource/inter': '@fontsource-variable/inter',
+  'fontsource/fraunces': '@fontsource-variable/fraunces',
+};
+Object.entries(vendorDirs).forEach(([name, dir]) => {
+  app.use(`/vendor/${name}`, express.static(path.join(__dirname, 'node_modules', dir), { maxAge: '30d' }));
+});
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '100kb' }));
+
+const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.SESSION_SECRET) {
+  console.warn('SESSION_SECRET não definido: usando um segredo aleatório (as sessões são perdidas a cada reinício).');
+}
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || 'troque-para-uma-senha-segura',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       maxAge: 1000 * 60 * 60 * 24, // 24 horas
+      httpOnly: true,
       sameSite: 'lax',              // permite cookie após redirect externo (QR code)
-      secure: false,                // true apenas em HTTPS em producao
+      secure: 'auto',               // true automaticamente em HTTPS (use TRUST_PROXY atrás de proxy)
     },
   })
 );
+
+// Miniaturas ficam no mesmo bucket, sob o prefixo thumbs/
+const thumbKeyFor = key => `thumbs/${key}`;
+
+// ─── Rate limit ───────────────────────────────────────────────────────────────
+const limiterOptions = { standardHeaders: 'draft-7', legacyHeaders: false };
+const loginLimiter = rateLimit({
+  ...limiterOptions, windowMs: 15 * 60 * 1000, limit: 10, skipSuccessfulRequests: true,
+  message: { error: 'Muitas tentativas de login. Tente novamente em alguns minutos.' },
+});
+const qrLimiter = rateLimit({
+  ...limiterOptions, windowMs: 15 * 60 * 1000, limit: 20,
+  message: 'Muitas tentativas. Tente novamente em alguns minutos.',
+});
+const commentLimiter = rateLimit({
+  ...limiterOptions, windowMs: 60 * 1000, limit: 12,
+  message: { error: 'Você está comentando rápido demais. Aguarde um instante.' },
+});
+
+// ─── Helpers de validação ─────────────────────────────────────────────────────
+const isStr = (v, max = 500) => typeof v === 'string' && v.length <= max;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const ha = crypto.createHash('sha256').update(a).digest();
+  const hb = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
 
 // ─── Guards ───────────────────────────────────────────────────────────────────
 function ensureSignedIn(req, res, next) {
@@ -141,8 +228,13 @@ function ensureCanComment(req, res, next) {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+app.post('/login', loginLimiter, async (req, res) => {
+  const { username, password } = req.body || {};
+
+  // Só aceita strings: evita injeção NoSQL (ex.: { "username": { "$ne": "" } })
+  if (!isStr(username, 100) || !isStr(password, 200) || !username || !password) {
+    return res.status(400).json({ error: 'Informe usuário e senha' });
+  }
 
   if (!usersCollection) {
     return res.status(503).json({ error: 'Banco de dados não disponível' });
@@ -184,11 +276,14 @@ app.get('/qr-key', ensureAdmin, (req, res) => {
 });
 
 // ─── Login via QR Code (acesso visitante) ─────────────────────────────────────
-app.get('/login-qr', async (req, res) => {
+app.get('/login-qr', qrLimiter, async (req, res) => {
   const { key } = req.query;
 
-  // 1️⃣ Valida a chave do QR
-  if (key !== process.env.QR_ACCESS_KEY) {
+  // 1️⃣ Valida a chave do QR (comparação em tempo constante).
+  // Sem QR_ACCESS_KEY configurada o acesso por QR fica desativado
+  // (antes, uma requisição sem "key" passava na comparação undefined !== undefined).
+  const expectedKey = process.env.QR_ACCESS_KEY;
+  if (!expectedKey || !safeEqual(key, expectedKey)) {
     return res.status(403).send('QR Code inválido');
   }
 
@@ -284,7 +379,7 @@ app.get('/stats', ensureSignedIn, async (req, res) => {
 
 app.get('/comments', ensureSignedIn, async (req, res) => {
   const { imageKey } = req.query;
-  if (!imageKey) return res.status(400).json({ error: 'imageKey obrigatório' });
+  if (!isStr(imageKey, 300) || !imageKey) return res.status(400).json({ error: 'imageKey obrigatório' });
 
   if (!commentsCollection) {
     return res.status(503).json({ error: 'MongoDB não disponível' });
@@ -292,7 +387,7 @@ app.get('/comments', ensureSignedIn, async (req, res) => {
 
   try {
     const comments = await commentsCollection
-      .find({ imageKey: decodeURIComponent(imageKey) })
+      .find({ imageKey })
       .sort({ createdAt: 1 })
       .toArray();
     return res.json(comments.map(({ _id, ...c }) => ({ ...c, _id: _id.toString() })));
@@ -339,11 +434,14 @@ app.get('/comments/counts', ensureSignedIn, async (req, res) => {
   }
 });
 
-app.post('/comments', ensureCanComment, async (req, res) => {
-  const { imageKey, text, name, email } = req.body;
+app.post('/comments', commentLimiter, ensureCanComment, async (req, res) => {
+  const { imageKey, text, name, email } = req.body || {};
 
-  if (!imageKey || !text?.trim()) {
-    return res.status(400).json({ error: 'imageKey e text são obrigatórios' });
+  if (!isStr(imageKey, 300) || !isStr(text, 1000) || !imageKey || !text.trim()) {
+    return res.status(400).json({ error: 'imageKey e text são obrigatórios (texto de até 1000 caracteres)' });
+  }
+  if ((name != null && !isStr(name, 80)) || (email != null && (!isStr(email, 120) || (email && !EMAIL_RE.test(email))))) {
+    return res.status(400).json({ error: 'Nome ou e-mail inválido' });
   }
 
   if (!commentsCollection) {
@@ -377,8 +475,9 @@ app.post('/comments', ensureCanComment, async (req, res) => {
 
 app.patch('/comments/:id', ensureAdmin, async (req, res) => {
   const { ObjectId } = require('mongodb');
-  const { text } = req.body;
-  if (!text?.trim()) return res.status(400).json({ error: 'Texto obrigatorio' });
+  const { text } = req.body || {};
+  if (!isStr(text, 1000) || !text.trim()) return res.status(400).json({ error: 'Texto obrigatorio (até 1000 caracteres)' });
+  if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'ID inválido' });
   try {
     const result = await commentsCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
@@ -463,8 +562,8 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
     return res.status(500).json({ error: 'MongoDB não está disponível' });
   }
 
-  const summary = (req.body.summary || '').trim();
-  const location = (req.body.location || '').trim();
+  const summary = String(req.body.summary || '').trim().slice(0, 500);
+  const location = String(req.body.location || '').trim().slice(0, 120);
 
   // ── Extrai GPS e data EXIF do buffer ORIGINAL (antes do sharp) ──────────────
   let gps = null;
@@ -521,21 +620,37 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
       .webp({ quality: 85 })
       .toBuffer();
 
+    // Miniatura (640px) para a galeria: carrega muito mais rápido que a imagem original
+    const thumbBuffer = await sharp(processedBuffer)
+      .resize(640, 800, { fit: 'cover', position: 'attention' })
+      .webp({ quality: 78 })
+      .toBuffer();
+
     const originalName = req.file.originalname.replace(/\.[^.]+$/, '');
     const key = `${originalName}.webp`;
+    const thumbKey = thumbKeyFor(key);
 
-    await s3.send(
-      new PutObjectCommand({
+    await Promise.all([
+      s3.send(new PutObjectCommand({
         Bucket: process.env.R2_BUCKET,
         Key: key,
         Body: processedBuffer,
         ContentType: 'image/webp',
-      })
-    );
+        CacheControl: 'public, max-age=31536000, immutable',
+      })),
+      s3.send(new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET,
+        Key: thumbKey,
+        Body: thumbBuffer,
+        ContentType: 'image/webp',
+        CacheControl: 'public, max-age=31536000, immutable',
+      })),
+    ]);
 
     const document = {
       key,
       url: `${publicUrl}/${encodeURIComponent(key)}`,
+      thumbUrl: `${publicUrl}/thumbs/${encodeURIComponent(key)}`,
       uploadDate: new Date(),
       photoDate: new Date(photoDate),
       summary,
@@ -555,8 +670,12 @@ app.post('/upload', ensureSignedIn, upload.single('photo'), async (req, res) => 
 
 // ─── Editar imagem (admin only) ──────────────────────────────────────────────
 app.patch('/images', ensureAdmin, async (req, res) => {
-  const { key, summary, location, photoDate, private: priv } = req.body;
-  if (!key) return res.status(400).json({ error: 'key obrigatoria' });
+  const { key, summary, location, photoDate, private: priv } = req.body || {};
+  if (!isStr(key, 300) || !key) return res.status(400).json({ error: 'key obrigatoria' });
+  if ((summary !== undefined && !isStr(summary, 500)) || (location !== undefined && !isStr(location, 120))) {
+    return res.status(400).json({ error: 'Texto muito longo ou inválido' });
+  }
+  if (photoDate && isNaN(new Date(photoDate))) return res.status(400).json({ error: 'Data inválida' });
   try {
     const update = {};
     if (summary  !== undefined) update.summary   = summary.trim();
@@ -573,7 +692,7 @@ app.patch('/images', ensureAdmin, async (req, res) => {
 
 app.delete('/images', ensureSignedIn, async (req, res) => {
   const key = req.query.key;
-  if (!key) return res.status(400).json({ error: 'Chave da imagem obrigatória' });
+  if (!isStr(key, 300) || !key) return res.status(400).json({ error: 'Chave da imagem obrigatória' });
 
   const role = req.session.user?.role;
   if (role === 'viewer' || role === 'commenter') {
@@ -581,7 +700,7 @@ app.delete('/images', ensureSignedIn, async (req, res) => {
   }
 
   try {
-    const decodedKey = decodeURIComponent(key);
+    const decodedKey = key; // o Express já decodifica a query string
 
     if (imageCollection) {
       const image = await imageCollection.findOne({ key: decodedKey });
@@ -596,12 +715,27 @@ app.delete('/images', ensureSignedIn, async (req, res) => {
     }
 
     await s3.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET, Key: decodedKey }));
+    // remove também a miniatura (pode não existir em fotos antigas)
+    await s3.send(new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET, Key: thumbKeyFor(decodedKey) })).catch(() => {});
     if (imageCollection) await imageCollection.deleteOne({ key: decodedKey });
     return res.json({ ok: true });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: 'Erro ao deletar imagem' });
   }
+});
+
+// ─── Erros (ex.: upload grande demais ou arquivo que não é imagem) ───────────
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err instanceof multer.MulterError) {
+    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'Arquivo maior que 25 MB' : 'Erro no envio do arquivo';
+    return res.status(400).json({ error: msg });
+  }
+  if (err?.message === 'Apenas imagens são permitidas') return res.status(400).json({ error: err.message });
+  if (err?.type === 'entity.too.large') return res.status(413).json({ error: 'Requisição grande demais' });
+  console.error(err);
+  return res.status(500).json({ error: 'Erro interno' });
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

@@ -1,10 +1,11 @@
 {
   "name": "Scrapbook World Cruise",
   "short_name": "Scrapbook",
+  "description": "Memórias, fotos e mensagens do World Cruise",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0d6efd",
+  "background_color": "#081528",
+  "theme_color": "#081528",
   "icons": [
     {
       "src": "/icons/icon-192.png",

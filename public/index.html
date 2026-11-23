@@ -1,2046 +1,393 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt" data-bs-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📸</text></svg>">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0d6efd">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Scrapbook">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Scrapbook World Cruise</title>
-  <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Scrapbook World Cruise">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+  <meta name="description" content="Scrapbook World Cruise Crew — memórias, fotos e mensagens da nossa volta ao mundo." />
+  <meta name="theme-color" content="#081528" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Scrapbook" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
 
-  <style>
-    body { font-family: Inter, system-ui, sans-serif; background: #eef2ff; color: #0f172a; margin: 0; }
-    .navbar-brand { font-weight: 700; letter-spacing: 0.01em; }
-    .panel-card { border: none; border-radius: 1.25rem; box-shadow: 0 18px 45px rgba(15,23,42,.08); }
-
-    .upload-area {
-      border: 2px dashed #cbd5f5;
-      border-radius: 1rem;
-      padding: 2rem;
-      text-align: center;
-      background: #f8fafc;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-    .upload-area:hover { border-color: #6366f1; background: #eef2ff; }
-    .upload-area.dragover { border-color: #4f46e5; background: #e0e7ff; }
-    .upload-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-    .upload-preview { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
-    .upload-preview img { max-width: 100%; max-height: 200px; border-radius: 0.75rem; object-fit: contain; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-    #remove-image { border-radius: 999px; }
-
-    .card-title-modern { display: flex; flex-direction: column; gap: 2px; }
-    .card-date { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
-    .card-location { font-size: 0.8rem; color: #64748b; }
-
-    .card-img-container { width: 100%; height: 220px; background: #2c2c2c; display: flex; align-items: center; justify-content: center; }
-    h3 { font-weight: 600; letter-spacing: -0.3px; }
-    .card-img-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-    .gallery-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .gallery-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,0.12); }
-
-    .meta-item { background: #f8fafc; border-radius: 1rem; padding: 0.9rem 1rem; }
-    .image-modal .modal-dialog { max-width: 980px; }
-    .image-modal .modal-content { border-radius: 1.5rem; background: #0f172a; overflow: hidden; }
-    .image-modal .modal-body { padding: 0; }
-    .image-modal .modal-body img { width: 100%; max-height: calc(90vh - 110px); object-fit: contain; display: block; background: #000; }
-    .image-modal .modal-footer { background: rgba(15,23,42,.95); color: #f8fafc; }
-    .image-modal .btn-close { filter: invert(1); }
-    .empty-gallery { color: #64748b; }
-    .btn-rounded { border-radius: 999px; }
-    #auth-panel, #admin-actions { display: none; }
-    @media (max-width: 768px) { .card-img-container { height: 180px; } }
-
-    /* Upload overlay */
-    #upload-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(15,23,42,.65); backdrop-filter: blur(3px);
-      z-index: 9999; flex-direction: column; align-items: center;
-      justify-content: center; gap: 1rem; color: #fff;
-    }
-    #upload-overlay.active { display: flex; }
-    #upload-overlay .spinner-border { width: 3rem; height: 3rem; }
-
-    /* Toast */
-    #upload-toast { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 10000; min-width: 280px; }
-
-    /* ── Comentários ──────────────────────────────────── */
-    .comments-section {
-      border-top: 1px solid #e2e8f0;
-      padding: 1rem 1rem 0.5rem;
-      background: #f8fafc;
-    }
-    .comments-toggle {
-      background: none; border: none; padding: 0;
-      font-size: 0.85rem; font-weight: 600;
-      color: #6366f1; cursor: pointer;
-      display: flex; align-items: center; gap: 0.4rem;
-    }
-    .comments-toggle:hover { color: #4f46e5; }
-    .comments-list { margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
-    .comment-item {
-      background: #fff; border-radius: 0.75rem;
-      padding: 0.6rem 0.85rem; font-size: 0.82rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,.06);
-      position: relative;
-    }
-    .comment-author {
-      font-weight: 700; color: #0f172a; font-size: 0.8rem;
-    }
-    .comment-role-badge {
-      display: inline-block; font-size: 0.65rem; font-weight: 600;
-      border-radius: 999px; padding: 1px 7px; margin-left: 5px;
-      vertical-align: middle; text-transform: uppercase; letter-spacing: 0.03em;
-    }
-    .badge-admin    { background: #fef3c7; color: #92400e; }
-    .badge-viewer   { background: #dbeafe; color: #1e40af; }
-    .badge-commenter{ background: #f0fdf4; color: #166534; }
-    .badge-anonymous{ background: #f1f5f9; color: #475569; }
-
-    .comment-email  { font-size: 0.72rem; color: #94a3b8; }
-    .comment-text   { color: #334155; margin-top: 0.2rem; line-height: 1.4; }
-    .comment-time   { font-size: 0.7rem; color: #cbd5e1; margin-top: 0.25rem; }
-    .comment-delete-btn {
-      position: absolute; top: 0.4rem; right: 0.5rem;
-      background: none; border: none; color: #fca5a5;
-      font-size: 0.75rem; cursor: pointer; padding: 0 4px;
-      line-height: 1; display: none;
-    }
-    .comment-delete-btn:hover { color: #ef4444; }
-
-    .comment-form { margin-top: 0.75rem; }
-    .comment-form textarea {
-      border-radius: 0.75rem; border: 1.5px solid #e2e8f0;
-      font-size: 0.82rem; resize: none; padding: 0.5rem 0.75rem;
-      background: #fff; transition: border-color 0.15s;
-      width: 100%;
-    }
-    .comment-form textarea:focus { outline: none; border-color: #6366f1; }
-    .comment-form .anon-fields { display: none; gap: 0.4rem; margin-bottom: 0.4rem; }
-    .comment-form .anon-fields input {
-      border-radius: 0.75rem; border: 1.5px solid #e2e8f0;
-      font-size: 0.8rem; padding: 0.4rem 0.75rem; width: 100%;
-      background: #fff; transition: border-color 0.15s;
-    }
-    .comment-form .anon-fields input:focus { outline: none; border-color: #6366f1; }
-    .comment-submit {
-      margin-top: 0.4rem; border-radius: 999px;
-      font-size: 0.8rem; padding: 0.35rem 1.1rem;
-    }
-    .comments-hidden { display: none; }
-
-    /* ── Language selector ──────────────────────────────── */
-    .lang-btn {
-      font-size: 1rem;
-      padding: 0.25rem 0.5rem;
-      line-height: 1;
-    }
-    .lang-dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-    }
-
-    /* ── Ranking badge no cabeçalho do card ─────────────── */
-    .card-rank-badge {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #fff;
-      background: linear-gradient(135deg, #6366f1, #4f46e5);
-      border-radius: 999px;
-      padding: 3px 10px 3px 7px;
-      white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(99,102,241,.35);
-    }
-    .card-rank-badge .rank-icon { font-size: 0.9rem; }
-    /* Medalha de ouro para o 1º colocado */
-    .card-rank-badge.rank-1st {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      box-shadow: 0 2px 10px rgba(245,158,11,.45);
-    }
-    /* Medalha de prata para o 2º */
-    .card-rank-badge.rank-2nd {
-      background: linear-gradient(135deg, #94a3b8, #64748b);
-      box-shadow: 0 2px 8px rgba(100,116,139,.35);
-    }
-    /* Bronze para o 3º */
-    .card-rank-badge.rank-3rd {
-      background: linear-gradient(135deg, #cd7c3f, #a85f28);
-      box-shadow: 0 2px 8px rgba(180,100,50,.35);
-    }
-  </style>
+  <script src="/js/theme.js"></script>
+  <link rel="stylesheet" href="/vendor/fontsource/inter/index.css" />
+  <link rel="stylesheet" href="/vendor/fontsource/fraunces/index.css" />
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="preconnect" href="https://pub-1b9f56270eda4c8cbdb655d80c3c2ab0.r2.dev" crossorigin />
 </head>
 <body>
-<header class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-  <div class="container px-3 py-2">
-    <a class="navbar-brand" href="#" data-i18n="brand">📸 Scrapbook World Cruise 2026</a>
-    <div class="d-flex gap-2 ms-auto align-items-center">
-      <button id="home-btn" class="btn btn-outline-light btn-sm btn-rounded" data-i18n="nav.home">Home</button>
-      <button id="new-image-btn" class="btn btn-primary btn-sm btn-rounded" data-i18n="nav.newImage" style="display:none;">Nova imagem</button>
 
-      <!-- ── Seletor de idioma ── -->
+<!-- ═════════ Navbar ═════════ -->
+<header class="app-nav" id="app-nav">
+  <div class="container">
+    <a class="brand" href="#top" id="brand-link">
+      <span class="brand-mark"><i class="bi bi-compass-fill" aria-hidden="true"></i></span>
+      <span class="brand-text">
+        <strong>Scrapbook</strong>
+        <small>World Cruise 2026</small>
+      </span>
+    </a>
+
+    <div class="nav-actions">
+      <button id="new-image-btn" class="btn btn-primary btn-sm px-3" type="button" hidden>
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i><span data-i18n="nav.newImage">Nova imagem</span>
+      </button>
+
       <div class="dropdown">
-        <button class="btn btn-outline-light btn-sm btn-rounded lang-btn dropdown-toggle"
-                type="button" id="lang-dropdown-btn"
-                data-bs-toggle="dropdown" aria-expanded="false"
-                title="Selecionar idioma">
-          <span id="lang-flag">🇧🇷</span>
+        <button class="btn nav-btn btn-sm btn-outline-secondary px-3" type="button" id="lang-dropdown-btn"
+                data-bs-toggle="dropdown" aria-expanded="false" data-i18n-aria="nav.language" aria-label="Idioma">
+          <i class="bi bi-translate me-1" aria-hidden="true"></i><span id="lang-code">PT</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="lang-dropdown-btn">
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('pt'); return false;">🇧🇷 <span>Português</span></a></li>
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('en'); return false;">🇺🇸 <span>English</span></a></li>
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('de'); return false;">🇩🇪 <span>Deutsch</span></a></li>
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('es'); return false;">🇪🇸 <span>Español</span></a></li>
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('fr'); return false;">🇫🇷 <span>Français</span></a></li>
-          <li><a class="dropdown-item lang-dropdown-item" href="#" onclick="setLanguage('it'); return false;">🇮🇹 <span>Italiano</span></a></li>
+          <li><button class="dropdown-item" type="button" data-lang="pt">Português</button></li>
+          <li><button class="dropdown-item" type="button" data-lang="en">English</button></li>
+          <li><button class="dropdown-item" type="button" data-lang="de">Deutsch</button></li>
+          <li><button class="dropdown-item" type="button" data-lang="es">Español</button></li>
+          <li><button class="dropdown-item" type="button" data-lang="fr">Français</button></li>
+          <li><button class="dropdown-item" type="button" data-lang="it">Italiano</button></li>
         </ul>
       </div>
 
-      <!-- ── Auth dropdown ── -->
-      <div class="dropdown">
-        <button class="btn btn-outline-light btn-sm btn-rounded dropdown-toggle" type="button"
-          id="auth-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
-          <span id="auth-dropdown-label" data-i18n="nav.login">Login</span>
+      <button id="theme-toggle" class="btn nav-btn btn-outline-secondary btn-icon theme-toggle" type="button"
+              data-i18n-aria="theme.toggle" aria-label="Alternar tema">
+        <i class="bi bi-moon-stars-fill" aria-hidden="true"></i><i class="bi bi-sun-fill" aria-hidden="true"></i>
+      </button>
+
+      <button id="login-btn" class="btn btn-primary btn-sm px-3" type="button">
+        <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i><span data-i18n="nav.login">Login</span>
+      </button>
+
+      <div class="dropdown" id="user-menu" hidden>
+        <button class="btn nav-btn btn-outline-secondary btn-sm ps-1 pe-3 d-flex align-items-center gap-2" type="button"
+                id="auth-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="avatar" id="user-avatar" style="width:1.8rem;height:1.8rem;font-size:.75rem">?</span>
+          <span id="auth-dropdown-label" class="d-none d-sm-inline text-truncate" style="max-width:9rem"></span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="auth-dropdown-btn">
-          <li id="dd-login-item"><a class="dropdown-item" href="#" id="dd-login-link" data-i18n="nav.ddLogin">🔐 Entrar</a></li>
-          <li id="dd-logout-item" style="display:none;"><a class="dropdown-item text-danger" href="#" id="dd-logout-link" data-i18n="nav.ddLogout">🚪 Sair</a></li>
+          <li><button class="dropdown-item text-danger" type="button" id="logout-btn">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span data-i18n="nav.ddLogout">Sair</span>
+          </button></li>
         </ul>
       </div>
     </div>
   </div>
 </header>
 
-<main class="container py-4">
-  <div class="row g-4 mb-4">
-    <div class="col-12 col-lg-7">
-      <div class="card panel-card p-4 h-100">
-        <div class="d-flex align-items-center">
-          <div class="w-50">
-            <h2 class="fw-bold" data-i18n="hero.title">Scrapbook World Cruise Crew</h2>
-            <p class="text-secondary mb-3" data-i18n="hero.p1">
-              Cruzar os oceanos é muito mais do que colecionar carimbos no passaporte; é sobre as conexões que ancoram no nosso coração. Nossa jornada pelo World Cruise tem sido um mosaico de culturas, sabores e sorrisos compartilhados.
-            </p>
-            <p class="text-secondary mb-3" data-i18n="hero.p2">
-              Aos novos amigos e a essa equipe impecável que transformou o navio em nossa casa: nosso muito obrigado! Vocês não apenas cuidaram dos detalhes, mas deram alma aos nossos dias em alto-mar, tornando tudo mais divertido.
-            </p>
-            <p class="text-secondary mb-0 fw-bold" data-i18n="hero.p3">
-              Vamos deixar nossa mensagem a quem nos recebeu com excelência.
-            </p>
-          </div>
-          <div class="w-50 ps-4">
-            <img src="https://pub-1b9f56270eda4c8cbdb655d80c3c2ab0.r2.dev/walEvandro.png" alt="World Cruise Experience" class="img-fluid rounded">
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-12 col-lg-5">
-      <div id="auth-panel" class="card panel-card p-4 h-100">
-        <div id="logged-out">
-          <h2 class="fw-bold mb-3" data-i18n="login.title">Entrar</h2>
-          <p class="text-secondary" data-i18n="login.subtitle">Faça login para enviar e ver suas fotos.</p>
-          <form id="login-form" class="mt-4 d-flex flex-column gap-2">
-            <input type="text" class="form-control" name="username"
-                   data-i18n-placeholder="login.userPlaceholder" placeholder="Usuário" required />
-            <input type="password" class="form-control" name="password"
-                   data-i18n-placeholder="login.passPlaceholder" placeholder="Senha" required />
-            <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100" data-i18n="login.btn">Entrar</button>
-          </form>
-          <p id="auth-error" class="text-danger mt-2 mb-1"></p>
-        </div>
-        <div id="logged-in" style="display:none;">
-          <div class="d-flex align-items-center justify-content-between mb-4">
+<main id="top">
+  <!-- ═════════ Hero ═════════ -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <span class="eyebrow"><i class="bi bi-water" aria-hidden="true"></i><span data-i18n="hero.eyebrow">World Cruise 2026</span></span>
+          <h1 data-i18n="hero.title">Scrapbook World Cruise Crew</h1>
+          <p class="hero-lead" data-i18n="hero.p1">Cruzar os oceanos é muito mais do que colecionar carimbos no passaporte; é sobre as conexões que ancoram no nosso coração. Nossa jornada pelo World Cruise tem sido um mosaico de culturas, sabores e sorrisos compartilhados.</p>
+          <div class="hero-more" id="hero-more">
             <div>
-              <p class="mb-0 text-secondary small" data-i18n="login.connectedAs">Conectado como</p>
-              <p class="mb-0 fw-bold fs-5"><span id="current-user"></span> <span class="badge rounded-pill" id="role-badge" style="font-size:.7rem;background:#ede9fe;color:#7c3aed;"><span id="current-role"></span></span></p>
+              <p data-i18n="hero.p2">Aos novos amigos e a essa equipe impecável que transformou o navio em nossa casa: nosso muito obrigado! Vocês não apenas cuidaram dos detalhes, mas deram alma aos nossos dias em alto-mar, tornando tudo mais divertido.</p>
+              <p class="fw-bold" data-i18n="hero.p3">Vamos deixar nossa mensagem a quem nos recebeu com excelência.</p>
             </div>
-            <button id="logout-btn" class="btn btn-outline-secondary btn-sm btn-rounded" data-i18n="login.logoutBtn">Sair</button>
           </div>
-          <h2 class="fw-bold mb-3" style="font-size:1.6rem;color:#0f172a;line-height:1.2;" data-i18n="stats.title">Deixe sua mensagem.</h2>
-          <div id="stats-panel" class="d-flex flex-column gap-3">
-            <div class="p-4 rounded-4 d-flex align-items-center gap-3" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
-              <div id="stats-images" class="fw-bold flex-shrink-0" style="font-size:clamp(2.5rem,10vw,4.5rem);color:#7c3aed;line-height:1;width:130px;text-align:center;">-</div>
-              <div class="min-w-0">
-                <div id="stats-images-label" class="fw-bold" style="font-size:clamp(1rem,4vw,1.6rem);color:#5b21b6;" data-i18n="stats.images">🖼️ Fotos</div>
-                <div class="mt-1" style="font-size:clamp(.75rem,3vw,.85rem);color:#7c3aed;opacity:.75;" data-i18n="stats.imagesSub">disponíveis para visualização</div>
-              </div>
+          <div class="hero-actions">
+            <a href="#gallery-section" class="btn btn-gold btn-lg px-4">
+              <i class="bi bi-images me-2" aria-hidden="true"></i><span data-i18n="hero.cta">Ver galeria</span>
+            </a>
+            <button type="button" id="hero-more-btn" class="btn btn-ghost-light btn-lg px-4" aria-expanded="false" aria-controls="hero-more">
+              <span data-i18n="hero.more">Ler mais</span>
+            </button>
+          </div>
+        </div>
+        <figure class="hero-figure m-0">
+          <img src="https://pub-1b9f56270eda4c8cbdb655d80c3c2ab0.r2.dev/walEvandro.png" alt="World Cruise Experience" width="440" height="550" fetchpriority="high" />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ Faixa de boas-vindas / stats ═════════ -->
+  <section class="strip container" id="strip">
+    <div class="panel">
+      <div class="strip-grid">
+        <div id="strip-guest">
+          <h2 class="strip-title" data-i18n="login.title">Entrar</h2>
+          <p class="text-secondary mb-3" data-i18n="login.subtitle">Faça login para enviar e ver suas fotos.</p>
+          <button type="button" class="btn btn-primary px-4" id="strip-login-btn" data-i18n="login.btn">Entrar</button>
+        </div>
+        <div id="strip-user" hidden>
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+            <span class="small text-secondary" data-i18n="login.connectedAs">Conectado como</span>
+            <strong id="current-user"></strong>
+            <span class="role-pill" id="current-role"></span>
+          </div>
+          <h2 class="strip-title" data-i18n="stats.title">Deixe sua mensagem.</h2>
+        </div>
+
+        <div class="stat-row" id="stat-row" hidden>
+          <div class="stat">
+            <span class="stat-icon is-blue"><i class="bi bi-images" aria-hidden="true"></i></span>
+            <div class="min-w-0">
+              <div class="stat-num" id="stats-images">–</div>
+              <div class="stat-label"><strong id="stats-images-label" data-i18n="stats.images">Fotos</strong><br><span data-i18n="stats.imagesSub">disponíveis para visualização</span></div>
             </div>
-            <div class="p-4 rounded-4 d-flex align-items-center gap-3" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);">
-              <div id="stats-comments" class="fw-bold flex-shrink-0" style="font-size:clamp(2.5rem,10vw,4.5rem);color:#16a34a;line-height:1;width:130px;text-align:center;">-</div>
-              <div class="min-w-0">
-                <div class="fw-bold" style="font-size:clamp(1rem,4vw,1.6rem);color:#15803d;" data-i18n="stats.comments">💬 Comentários</div>
-                <div class="mt-1" style="font-size:clamp(.75rem,3vw,.85rem);color:#16a34a;opacity:.75;" data-i18n="stats.commentsSub">elogios e mensagens</div>
-              </div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon is-gold"><i class="bi bi-chat-heart-fill" aria-hidden="true"></i></span>
+            <div class="min-w-0">
+              <div class="stat-num" id="stats-comments">–</div>
+              <div class="stat-label"><strong data-i18n="stats.comments">Comentários</strong><br><span data-i18n="stats.commentsSub">elogios e mensagens</span></div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Upload panel -->
-  <div id="admin-actions" class="card panel-card p-4 mb-4">
-    <h2 class="fw-bold mb-3" data-i18n="upload.title">Upload de imagem</h2>
-    <form id="upload-form" class="row g-3">
-      <div class="col-12">
-        <div class="upload-area" id="upload-area">
-          <input type="file" id="file-input" name="photo" accept="image/*" hidden required />
-          <div class="upload-placeholder" id="upload-placeholder">
-            <div class="upload-icon">📁</div>
-            <p class="mb-1" data-i18n="upload.drag">Arraste sua imagem aqui</p>
-            <small class="text-muted" data-i18n="upload.dragSub">ou clique para selecionar</small>
-          </div>
-          <div class="upload-preview" id="upload-preview" style="display:none;">
-            <img id="preview-image" />
-            <button type="button" id="remove-image" class="btn btn-sm btn-danger" data-i18n="upload.removeBtn">Remover</button>
-          </div>
-        </div>
+  <div class="container py-4 py-lg-5">
+    <!-- ═════════ Upload (admin) ═════════ -->
+    <section id="admin-actions" class="panel mb-5" hidden>
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="panel-title mb-0" data-i18n="upload.title">Upload de imagem</h2>
+        <button type="button" class="btn btn-outline-secondary btn-icon" id="upload-close" data-i18n-aria="lightbox.close" aria-label="Fechar">
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
       </div>
-      <div class="col-md-6">
-        <input id="photoDate" type="text" class="form-control" name="photoDate"
-               data-i18n-placeholder="upload.datePlaceholder" placeholder="Data da foto" />
-      </div>
-      <div class="col-md-6">
-        <input type="text" class="form-control" name="location"
-               data-i18n-placeholder="upload.locationPlaceholder" placeholder="Local (ex: Praia de Copacabana)" />
-      </div>
-      <div class="col-12">
-        <input type="text" class="form-control" name="summary"
-               data-i18n-placeholder="upload.summaryPlaceholder" placeholder="Resumo da imagem" />
-      </div>
-      <div class="col-12" id="private-toggle-wrapper" style="display:none;">
-        <div class="form-check form-switch ps-0 d-flex align-items-center gap-2 p-3 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
-          <input class="form-check-input ms-0" type="checkbox" id="privateToggle" name="private" style="width:2.5rem;height:1.3rem;cursor:pointer;">
-          <label class="form-check-label fw-semibold text-secondary" for="privateToggle" data-i18n="upload.privateLabel">
-            Publicar somente para mim (imagem privada)
-          </label>
-        </div>
-      </div>
-      <div class="col-12">
-        <button type="submit" class="btn btn-primary btn-lg btn-rounded w-100" data-i18n="upload.btn">Enviar imagem</button>
-      </div>
-    </form>
-
-    <hr class="my-3">
-    <div class="d-flex align-items-center justify-content-between">
-      <div>
-        <p class="fw-semibold mb-0" data-i18n="qr.title">🔗 Acesso por QR Code</p>
-        <small class="text-muted" data-i18n="qr.subtitle">Compartilhe com visitantes para acesso direto</small>
-      </div>
-      <button class="btn btn-outline-primary btn-sm btn-rounded" onclick="showQrModal()" data-i18n="qr.btn">Gerar QR Code</button>
-    </div>
-  </div>
-
-  <!-- Modal QR Code -->
-  <div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:380px">
-      <div class="modal-content" style="border-radius:1.5rem;">
-        <div class="modal-header border-0 pb-0 px-4 pt-4">
-          <h5 class="modal-title fw-bold" data-i18n="qr.modalTitle">📱 QR Code de Acesso</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-center px-4 pb-4">
-          <p class="text-muted small mb-3" data-i18n="qr.modalSub">Escaneie para entrar como visitante</p>
-          <div class="d-flex justify-content-center mb-3">
-            <div id="qr-canvas" style="border-radius:1rem;padding:12px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.1);display:inline-block;"></div>
-          </div>
-          <div class="input-group input-group-sm">
-            <input type="text" id="qr-url-input" class="form-control" readonly style="font-size:.75rem;">
-            <button class="btn btn-outline-secondary" onclick="copyQrUrl()" data-i18n="qr.copy">Copiar</button>
+      <form id="upload-form" class="row g-3">
+        <div class="col-12">
+          <div class="upload-area" id="upload-area" role="button" tabindex="0">
+            <input type="file" id="file-input" name="photo" accept="image/*,.heic" hidden required />
+            <div id="upload-placeholder">
+              <div class="upload-icon"><i class="bi bi-cloud-arrow-up" aria-hidden="true"></i></div>
+              <p class="mb-1 fw-semibold" data-i18n="upload.drag">Arraste sua imagem aqui</p>
+              <small class="text-secondary d-block" data-i18n="upload.dragSub">ou clique para selecionar</small>
+              <small class="text-secondary d-block mt-1" data-i18n="upload.hint">JPG, PNG, WebP ou HEIC</small>
+            </div>
+            <div class="upload-preview" id="upload-preview" hidden>
+              <img id="preview-image" alt="" />
+              <button type="button" id="remove-image" class="btn btn-sm btn-outline-danger px-3" data-i18n="upload.removeBtn">Remover</button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
+        <div class="col-md-6">
+          <input id="photoDate" type="text" class="form-control" name="photoDate" data-i18n-placeholder="upload.datePlaceholder" placeholder="Data da foto" autocomplete="off" />
+        </div>
+        <div class="col-md-6">
+          <input type="text" class="form-control" name="location" maxlength="120" data-i18n-placeholder="upload.locationPlaceholder" placeholder="Local (ex: Praia de Copacabana)" />
+        </div>
+        <div class="col-12">
+          <input type="text" class="form-control" name="summary" maxlength="500" data-i18n-placeholder="upload.summaryPlaceholder" placeholder="Resumo da imagem" />
+        </div>
+        <div class="col-12">
+          <div class="switch-row form-check form-switch ps-0">
+            <input class="form-check-input" type="checkbox" id="privateToggle" name="private" role="switch" />
+            <label for="privateToggle" data-i18n="upload.privateLabel">Publicar somente para mim (imagem privada)</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-send me-2" aria-hidden="true"></i><span data-i18n="upload.btn">Enviar imagem</span>
+          </button>
+        </div>
+      </form>
 
-  <!-- Gallery -->
-  <div class="card panel-card p-4">
-    <div class="d-flex align-items-center justify-content-between mb-3 flex-column flex-md-row gap-3">
-      <div>
-        <h2 class="fw-bold mb-0" data-i18n="gallery.title">Galeria</h2>
-        <p class="text-secondary mb-0" data-i18n="gallery.subtitle">Veja as imagens enviadas e deixe seu comentário.</p>
+      <hr class="my-4" />
+      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div>
+          <p class="fw-semibold mb-0"><i class="bi bi-qr-code me-2" aria-hidden="true"></i><span data-i18n="qr.title">Acesso por QR Code</span></p>
+          <small class="text-secondary" data-i18n="qr.subtitle">Compartilhe com visitantes para acesso direto</small>
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm px-3" id="qr-btn" data-i18n="qr.btn">Gerar QR Code</button>
       </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div id="location-filter-buttons" class="btn-group flex-wrap"></div>
-        <select id="sort-select" class="form-select form-select-sm" style="width:auto;border-radius:999px;font-size:.82rem;">
-          <option value="comments">💬 Mais comentados</option>
-          <option value="newest">📅 Mais recentes</option>
-          <option value="oldest">📅 Mais antigos</option>
+    </section>
+
+    <!-- ═════════ Galeria ═════════ -->
+    <section id="gallery-section">
+      <div class="section-head">
+        <div>
+          <h2><span data-i18n="gallery.title">Galeria</span><span class="count-pill" id="gallery-count" hidden></span></h2>
+          <p data-i18n="gallery.subtitle">Veja as imagens enviadas e deixe seu comentário.</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div id="location-filter-buttons" class="chips" role="group" aria-label="Filtro"></div>
+        <select id="sort-select" class="form-select form-select-sm sort-select" aria-label="Ordenar">
+          <option value="comments" data-i18n="gallery.sortComments">Mais comentados</option>
+          <option value="newest" data-i18n="gallery.sortNewest">Mais recentes</option>
+          <option value="oldest" data-i18n="gallery.sortOldest">Mais antigos</option>
         </select>
       </div>
-    </div>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="gallery"></div>
-    <p class="empty-gallery text-center mt-4" id="empty-gallery" style="display:none;" data-i18n="gallery.empty">Nenhuma imagem encontrada.</p>
+      <div class="gallery-grid" id="gallery" aria-live="polite"></div>
+      <div class="empty-state" id="empty-gallery" hidden>
+        <i class="bi bi-image" aria-hidden="true"></i>
+        <p class="mb-0" data-i18n="gallery.empty">Nenhuma imagem encontrada.</p>
+      </div>
+    </section>
   </div>
 </main>
 
-<!-- Upload overlay -->
-<div id="upload-overlay">
-  <div class="spinner-border text-light" role="status"></div>
+<footer class="site-footer">
+  <div class="container d-flex flex-wrap justify-content-between gap-2">
+    <span><i class="bi bi-compass me-1" aria-hidden="true"></i>Scrapbook World Cruise 2026</span>
+    <span>Crew memories</span>
+  </div>
+</footer>
+
+<!-- ═════════ Lightbox ═════════ -->
+<div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lb-place" tabindex="-1">
+  <div class="lb-stage" id="lb-stage">
+    <button type="button" class="lb-btn lb-close" id="lb-close" data-i18n-aria="lightbox.close" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    <button type="button" class="lb-btn lb-prev" id="lb-prev" data-i18n-aria="lightbox.prev" aria-label="Anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+    <img id="lb-img" alt="" />
+    <button type="button" class="lb-btn lb-next" id="lb-next" data-i18n-aria="lightbox.next" aria-label="Próxima"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    <div class="lb-counter" id="lb-counter"></div>
+  </div>
+  <aside class="lb-panel">
+    <div class="lb-info">
+      <div class="lb-date" id="lb-date"></div>
+      <h3 class="lb-place" id="lb-place"></h3>
+      <p class="lb-summary" id="lb-summary"></p>
+      <div class="lb-tags" id="lb-tags"></div>
+      <div class="lb-admin" id="lb-admin" hidden></div>
+    </div>
+    <div class="lb-comments">
+      <div class="lb-comments-head"><i class="bi bi-chat-dots" aria-hidden="true"></i><span id="lb-comments-title" data-i18n="comment.toggle">Comentários</span></div>
+      <div class="lb-comments-list" id="lb-comments-list"></div>
+      <div class="lb-compose" id="lb-compose"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- ═════════ Overlay de upload ═════════ -->
+<div id="upload-overlay" role="status">
+  <div class="spinner-border text-light" aria-hidden="true"></div>
   <p class="mb-0 fw-semibold fs-5" data-i18n="upload.sending">Enviando imagem…</p>
 </div>
 
-<!-- Toast -->
-<div id="upload-toast" class="toast align-items-center text-bg-success border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-  <div class="d-flex">
-    <div class="toast-body fs-6" data-i18n="upload.successToast">✅ Imagem enviada com sucesso!</div>
-    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
-  </div>
-</div>
+<!-- ═════════ Toasts ═════════ -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container" style="z-index:2100"></div>
 
-<!-- Modal: image view -->
-<div class="modal fade image-modal" id="imageModalBootstrap" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-xl">
+<!-- ═════════ Modal: login ═════════ -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
     <div class="modal-content">
-      <div class="modal-header border-0">
-        <h5 class="modal-title text-white" id="imageModalLabel" data-i18n="modal.title">Visualização da imagem</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title fs-3" id="loginModalLabel" data-i18n="login.title">Entrar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-i18n-aria="lightbox.close" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body p-0">
-        <img id="modal-image" src="" alt="Imagem em tamanho real" />
-      </div>
-      <div class="modal-footer border-0 py-3">
-        <p class="mb-0 text-white small" id="modal-coords" data-i18n="modal.hint">Clique fora ou use o botão de fechar.</p>
+      <div class="modal-body px-4 pb-4">
+        <p class="text-secondary" data-i18n="login.subtitle">Faça login para enviar e ver suas fotos.</p>
+        <form id="login-form" class="d-flex flex-column gap-2 mt-3">
+          <input type="text" class="form-control form-control-lg" name="username" autocomplete="username" data-i18n-placeholder="login.userPlaceholder" placeholder="Usuário" required />
+          <input type="password" class="form-control form-control-lg" name="password" autocomplete="current-password" data-i18n-placeholder="login.passPlaceholder" placeholder="Senha" required />
+          <button type="submit" class="btn btn-primary btn-lg w-100 mt-2" data-i18n="login.btn">Entrar</button>
+        </form>
+        <p id="auth-error" class="text-danger small mt-3 mb-0" role="alert"></p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: editar imagem -->
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+<!-- ═════════ Modal: confirmação ═════════ -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+    <div class="modal-content">
+      <div class="modal-body p-4">
+        <h5 class="modal-title mb-2" id="confirmModalLabel" data-i18n="confirm.title">Confirmar</h5>
+        <p class="text-secondary mb-4" id="confirm-message"></p>
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-outline-secondary px-4" id="confirm-cancel" data-i18n="gallery.editCancel">Cancelar</button>
+          <button type="button" class="btn btn-danger px-4" id="confirm-ok" data-i18n="gallery.deleteBtn">Excluir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════ Modal: editar imagem ═════════ -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:500px">
-    <div class="modal-content" style="border-radius:1.5rem;">
+    <div class="modal-content">
       <div class="modal-header border-0 px-4 pt-4 pb-0">
-        <h5 class="modal-title fw-bold" data-i18n="gallery.editTitle">Editar imagem</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <h5 class="modal-title fs-4" id="editModalLabel" data-i18n="gallery.editTitle">Editar imagem</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-i18n-aria="lightbox.close" aria-label="Fechar"></button>
       </div>
       <div class="modal-body px-4 pb-0">
-        <input type="hidden" id="edit-key">
+        <input type="hidden" id="edit-key" />
         <div class="mb-3">
-          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.locationPlaceholder">Localização</label>
-          <input type="text" id="edit-location" class="form-control" />
+          <label class="form-label" for="edit-location" data-i18n="upload.locationPlaceholder">Localização</label>
+          <input type="text" id="edit-location" class="form-control" maxlength="120" />
         </div>
         <div class="mb-3">
-          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.summaryPlaceholder">Descrição</label>
-          <textarea id="edit-summary" class="form-control" rows="3"></textarea>
+          <label class="form-label" for="edit-summary" data-i18n="upload.summaryPlaceholder">Descrição</label>
+          <textarea id="edit-summary" class="form-control" rows="3" maxlength="500"></textarea>
         </div>
         <div class="mb-3">
-          <label class="form-label fw-semibold text-secondary small" data-i18n="upload.datePlaceholder">Data da foto</label>
+          <label class="form-label" for="edit-date" data-i18n="upload.datePlaceholder">Data da foto</label>
           <input type="date" id="edit-date" class="form-control" />
         </div>
-        <div class="form-check form-switch d-flex align-items-center gap-2 p-3 rounded-3 mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
-          <input class="form-check-input ms-0" type="checkbox" id="edit-private" style="width:2.5rem;height:1.3rem;cursor:pointer;">
-          <label class="form-check-label fw-semibold text-secondary" for="edit-private" data-i18n="upload.privateLabel">Imagem privada</label>
+        <div class="switch-row form-check form-switch ps-0 mb-3">
+          <input class="form-check-input" type="checkbox" id="edit-private" role="switch" />
+          <label for="edit-private" data-i18n="upload.privateLabel">Imagem privada</label>
         </div>
       </div>
       <div class="modal-footer border-0 px-4 pb-4">
-        <button class="btn btn-outline-secondary btn-rounded" data-bs-dismiss="modal" data-i18n="gallery.editCancel">Cancelar</button>
-        <button class="btn btn-primary btn-rounded" id="edit-save-btn" data-i18n="gallery.editSave">Salvar</button>
+        <button class="btn btn-outline-secondary px-4" data-bs-dismiss="modal" data-i18n="gallery.editCancel">Cancelar</button>
+        <button class="btn btn-primary px-4" id="edit-save-btn" data-i18n="gallery.editSave">Salvar</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal: mapa GPS -->
+<!-- ═════════ Modal: QR Code ═════════ -->
+<div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:380px">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title fs-4" id="qrModalLabel" data-i18n="qr.modalTitle">QR Code de Acesso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-i18n-aria="lightbox.close" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center px-4 pb-4">
+        <p class="text-secondary small mb-3" data-i18n="qr.modalSub">Escaneie para entrar como visitante</p>
+        <div class="mb-3"><div id="qr-canvas" class="qr-box"></div></div>
+        <div class="input-group input-group-sm">
+          <input type="text" id="qr-url-input" class="form-control" readonly />
+          <button class="btn btn-outline-secondary" type="button" id="qr-copy-btn" data-i18n="qr.copy">Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════ Modal: mapa ═════════ -->
 <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" style="max-width:580px">
-    <div class="modal-content" style="border-radius:1.5rem;overflow:hidden;">
+    <div class="modal-content overflow-hidden">
       <div class="modal-header border-0 pb-0 px-4 pt-3">
         <div>
-          <h5 class="modal-title fw-bold mb-0" id="mapModalLabel" data-i18n="map.title">📍 Localização</h5>
-          <small class="text-muted" id="map-coords-label"></small>
+          <h5 class="modal-title mb-0" id="mapModalLabel" data-i18n="map.title">Localização</h5>
+          <small class="text-secondary" id="map-coords-label"></small>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-i18n-aria="lightbox.close" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body p-0 mt-3">
-        <div id="map-leaflet" style="width:100%;height:380px;"></div>
-      </div>
+      <div class="modal-body p-0 mt-3"><div id="map-leaflet"></div></div>
       <div class="modal-footer border-0 px-4 py-3 d-flex justify-content-between align-items-center">
-        <small class="text-muted" id="map-location-label"></small>
-        <a id="map-open-link" href="#" target="_blank" class="btn btn-sm btn-outline-primary btn-rounded">
-          <span data-i18n="map.openLink">🗺️ Abrir no mapa</span>
+        <small class="text-secondary" id="map-location-label"></small>
+        <a id="map-open-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary px-3">
+          <i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i><span data-i18n="map.openLink">Abrir no mapa</span>
         </a>
       </div>
     </div>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/service-worker.js");
-  }
-</script>
-
-<script>
-// ─── i18n ─────────────────────────────────────────────────────────────────────
-const translations = {
-  pt: {
-    flag: '🇧🇷',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Home',
-    'nav.newImage': 'Nova imagem',
-    'nav.login': 'Login',
-    'nav.ddLogin': '🔐 Entrar',
-    'nav.ddLogout': '🚪 Sair',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Cruzar os oceanos é muito mais do que colecionar carimbos no passaporte; é sobre as conexões que ancoram no nosso coração. Nossa jornada pelo World Cruise tem sido um mosaico de culturas, sabores e sorrisos compartilhados.',
-    'hero.p2': 'Aos novos amigos e a essa equipe impecável que transformou o navio em nossa casa: nosso muito obrigado! Vocês não apenas cuidaram dos detalhes, mas deram alma aos nossos dias em alto-mar, tornando tudo mais divertido.',
-    'hero.p3': 'Vamos deixar nossa mensagem a quem nos recebeu com excelência.',
-    'login.title': 'Entrar',
-    'login.subtitle': 'Faça login para enviar e ver suas fotos.',
-    'login.userPlaceholder': 'Usuário',
-    'login.passPlaceholder': 'Senha',
-    'login.btn': 'Entrar',
-    'login.btnLoading': 'Entrando…',
-    'login.errorMsg': 'Erro ao fazer login.',
-    'login.connectedAs': 'Conectado como',
-    'login.logoutBtn': 'Sair',
-    'stats.images': '🖼️ Fotos',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Deixe sua mensagem.',
-    'stats.imagesSub': 'disponíveis para visualização',
-    'stats.commentsSub': 'elogios e mensagens',
-    'stats.comments': '💬 Comentários',
-    'upload.title': 'Upload de imagem',
-    'upload.drag': 'Arraste sua imagem aqui',
-    'upload.dragSub': 'ou clique para selecionar',
-    'upload.removeBtn': 'Remover',
-    'upload.datePlaceholder': 'Data da foto',
-    'upload.locationPlaceholder': 'Local (ex: Praia de Copacabana)',
-    'upload.summaryPlaceholder': 'Resumo da imagem',
-    'upload.btn': 'Enviar imagem',
-    'upload.sending': 'Enviando imagem…',
-    'upload.successToast': '✅ Imagem enviada com sucesso!',
-    'upload.errorMsg': 'Erro ao enviar imagem.',
-    'upload.errorHeic': 'Erro ao processar imagem HEIC.',
-    'gallery.title': 'Galeria',
-    'gallery.subtitle': 'Veja as imagens enviadas e deixe seu comentário.',
-    'gallery.empty': 'Nenhuma imagem encontrada.',
-    'gallery.filterAll': 'Todos',
-    'gallery.noLocation': 'Local não informado',
-    'gallery.noDescription': 'Sem descrição',
-    'gallery.coords': 'Coordenadas:',
-    'gallery.coordsNA': 'N/A',
-    'gallery.coordsUnavailable': 'Coordenadas: não disponíveis',
-    'gallery.coordsLoading': 'Coordenadas: carregando...',
-    'gallery.dateLoading': 'carregando data...',
-    'gallery.dateUnavailable': 'não disponível',
-    'gallery.uploadedBy': 'Enviado por:',
-    'gallery.viewBtn': 'Exibir',
-    'gallery.deleteBtn': 'Excluir',
-    'gallery.editBtn': 'Editar',
-    'gallery.editTitle': 'Editar imagem',
-    'gallery.editSave': 'Salvar',
-    'gallery.editCancel': 'Cancelar',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Salvar',
-    'comment.editCancel': 'Cancelar',
-    'gallery.deleteConfirm': 'Deseja realmente excluir esta imagem?',
-    'gallery.memory': 'Memória',
-    'comment.toggle': 'Comentários',
-    'comment.singular': 'comentário',
-    'comment.plural': 'comentários',
-    'comment.loading': 'Carregando…',
-    'comment.none': 'Nenhum comentário ainda.',
-    'comment.error': 'Erro ao carregar comentários.',
-    'comment.placeholder': 'Escreva seu comentário…',
-    'comment.namePlaceholder': 'Seu nome *',
-    'comment.emailPlaceholder': 'Seu e-mail *',
-    'comment.btn': 'Enviar',
-    'comment.anonAlert': 'Preencha seu nome e e-mail para comentar.',
-    'comment.sendError': 'Erro ao enviar comentário.',
-    'comment.deleteConfirm': 'Excluir este comentário?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Viewer',
-    'comment.roleCommenter': 'Commenter',
-    'comment.roleAnonymous': 'Visitante',
-    'modal.title': 'Visualização da imagem',
-    'modal.hint': 'Clique fora ou use o botão de fechar.',
-    'upload.privateLabel': 'Publicar somente para mim (imagem privada)',
-    'upload.privateBadge': '🔒 Privado',
-    'qr.title': '🔗 Acesso por QR Code',
-    'qr.subtitle': 'Compartilhe com visitantes para acesso direto',
-    'qr.btn': 'Gerar QR Code',
-    'qr.modalTitle': '📱 QR Code de Acesso',
-    'qr.modalSub': 'Escaneie para entrar como visitante',
-    'qr.copy': 'Copiar',
-    'qr.copied': 'Copiado!',
-    'qr.keyMissing': 'QR_ACCESS_KEY não configurada no .env do servidor.',
-    'qr.fetchError': 'Erro ao buscar chave QR',
-    'map.title': '📍 Localização',
-    'map.openLink': '🗺️ Abrir no mapa',
-    'edit.saveError': 'Erro ao salvar alterações.',
-  },
-  en: {
-    flag: '🇺🇸',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Home',
-    'nav.newImage': 'New image',
-    'nav.login': 'Login',
-    'nav.ddLogin': '🔐 Sign in',
-    'nav.ddLogout': '🚪 Sign out',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Crossing oceans is about much more than collecting passport stamps; it\'s about the connections that anchor in our hearts. Our World Cruise journey has been a mosaic of cultures, flavours, and shared smiles.',
-    'hero.p2': 'To our new friends and the impeccable team that turned the ship into our home: thank you so much! You not only took care of every detail, but you gave soul to our days at sea, making everything more joyful.',
-    'hero.p3': 'Let\'s leave our message to those who welcomed us with excellence.',
-    'login.title': 'Sign in',
-    'login.subtitle': 'Log in to upload and view your photos.',
-    'login.userPlaceholder': 'Username',
-    'login.passPlaceholder': 'Password',
-    'login.btn': 'Sign in',
-    'login.btnLoading': 'Signing in…',
-    'login.errorMsg': 'Login error.',
-    'login.connectedAs': 'Signed in as',
-    'login.logoutBtn': 'Sign out',
-    'stats.images': '🖼️ Photos',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Leave your message.',
-    'stats.imagesSub': 'available to view',
-    'stats.commentsSub': 'compliments and messages',
-    'stats.comments': '💬 Comments',
-    'upload.title': 'Upload image',
-    'upload.drag': 'Drag your image here',
-    'upload.dragSub': 'or click to select',
-    'upload.removeBtn': 'Remove',
-    'upload.datePlaceholder': 'Photo date',
-    'upload.locationPlaceholder': 'Location (e.g. Copacabana Beach)',
-    'upload.summaryPlaceholder': 'Image summary',
-    'upload.btn': 'Send image',
-    'upload.sending': 'Uploading image…',
-    'upload.successToast': '✅ Image uploaded successfully!',
-    'upload.errorMsg': 'Error uploading image.',
-    'upload.errorHeic': 'Error processing HEIC image.',
-    'gallery.title': 'Gallery',
-    'gallery.subtitle': 'View uploaded images and leave a comment.',
-    'gallery.empty': 'No images found.',
-    'gallery.filterAll': 'All',
-    'gallery.noLocation': 'Location not provided',
-    'gallery.noDescription': 'No description',
-    'gallery.coords': 'Coordinates:',
-    'gallery.coordsNA': 'N/A',
-    'gallery.coordsUnavailable': 'Coordinates: unavailable',
-    'gallery.coordsLoading': 'Coordinates: loading...',
-    'gallery.dateLoading': 'loading date...',
-    'gallery.dateUnavailable': 'not available',
-    'gallery.uploadedBy': 'Uploaded by:',
-    'gallery.viewBtn': 'View',
-    'gallery.deleteBtn': 'Delete',
-    'gallery.editBtn': 'Edit',
-    'gallery.editTitle': 'Edit image',
-    'gallery.editSave': 'Save',
-    'gallery.editCancel': 'Cancel',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Save',
-    'comment.editCancel': 'Cancel',
-    'gallery.deleteConfirm': 'Are you sure you want to delete this image?',
-    'gallery.memory': 'Memory',
-    'comment.toggle': 'Comments',
-    'comment.singular': 'comment',
-    'comment.plural': 'comments',
-    'comment.loading': 'Loading…',
-    'comment.none': 'No comments yet.',
-    'comment.error': 'Error loading comments.',
-    'comment.placeholder': 'Write your comment…',
-    'comment.namePlaceholder': 'Your name *',
-    'comment.emailPlaceholder': 'Your e-mail *',
-    'comment.btn': 'Send',
-    'comment.anonAlert': 'Please fill in your name and e-mail to comment.',
-    'comment.sendError': 'Error sending comment.',
-    'comment.deleteConfirm': 'Delete this comment?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Viewer',
-    'comment.roleCommenter': 'Commenter',
-    'comment.roleAnonymous': 'Guest',
-    'modal.title': 'Image view',
-    'modal.hint': 'Click outside or use the close button.',
-    'upload.privateLabel': 'Post only for me (private image)',
-    'upload.privateBadge': '🔒 Private',
-    'qr.title': '🔗 QR Code Access',
-    'qr.subtitle': 'Share with visitors for direct access',
-    'qr.btn': 'Generate QR Code',
-    'qr.modalTitle': '📱 Access QR Code',
-    'qr.modalSub': 'Scan to log in as a visitor',
-    'qr.copy': 'Copy',
-    'qr.copied': 'Copied!',
-    'qr.keyMissing': 'QR_ACCESS_KEY not configured in server .env.',
-    'qr.fetchError': 'Error fetching QR key',
-    'map.title': '📍 Location',
-    'map.openLink': '🗺️ Open in map',
-    'edit.saveError': 'Error saving changes.',
-  },
-  de: {
-    flag: '🇩🇪',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Home',
-    'nav.newImage': 'Neues Bild',
-    'nav.login': 'Anmelden',
-    'nav.ddLogin': '🔐 Anmelden',
-    'nav.ddLogout': '🚪 Abmelden',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Die Ozeane zu überqueren bedeutet viel mehr als Stempel im Pass zu sammeln – es geht um Verbindungen, die im Herzen verankert bleiben. Unsere World-Cruise-Reise war ein Mosaik aus Kulturen, Aromen und gemeinsamen Lächeln.',
-    'hero.p2': 'An unsere neuen Freunde und das tadellose Team, das das Schiff zu unserem Zuhause gemacht hat: Herzlichen Dank! Ihr habt nicht nur auf jedes Detail geachtet, sondern unseren Tagen auf hoher See eine Seele gegeben, alles wurde noch freudvoller.',
-    'hero.p3': 'Hinterlassen wir unsere Botschaft an jene, die uns mit Exzellenz empfangen haben.',
-    'login.title': 'Anmelden',
-    'login.subtitle': 'Melde dich an, um Fotos hochzuladen und anzusehen.',
-    'login.userPlaceholder': 'Benutzername',
-    'login.passPlaceholder': 'Passwort',
-    'login.btn': 'Anmelden',
-    'login.btnLoading': 'Anmelden…',
-    'login.errorMsg': 'Anmeldefehler.',
-    'login.connectedAs': 'Angemeldet als',
-    'login.logoutBtn': 'Abmelden',
-    'stats.images': '🖼️ Fotos',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Hinterlassen Sie Ihre Nachricht.',
-    'stats.imagesSub': 'zum Anzeigen verfügbar',
-    'stats.commentsSub': 'Komplimente und Nachrichten',
-    'stats.comments': '💬 Kommentare',
-    'upload.title': 'Bild hochladen',
-    'upload.drag': 'Bild hierher ziehen',
-    'upload.dragSub': 'oder klicken zum Auswählen',
-    'upload.removeBtn': 'Entfernen',
-    'upload.datePlaceholder': 'Fotodatum',
-    'upload.locationPlaceholder': 'Ort (z. B. Copacabana-Strand)',
-    'upload.summaryPlaceholder': 'Bildbeschreibung',
-    'upload.btn': 'Bild senden',
-    'upload.sending': 'Bild wird hochgeladen…',
-    'upload.successToast': '✅ Bild erfolgreich hochgeladen!',
-    'upload.errorMsg': 'Fehler beim Hochladen des Bildes.',
-    'upload.errorHeic': 'Fehler beim Verarbeiten des HEIC-Bildes.',
-    'gallery.title': 'Galerie',
-    'gallery.subtitle': 'Hochgeladene Bilder ansehen und kommentieren.',
-    'gallery.empty': 'Keine Bilder gefunden.',
-    'gallery.filterAll': 'Alle',
-    'gallery.noLocation': 'Kein Ort angegeben',
-    'gallery.noDescription': 'Keine Beschreibung',
-    'gallery.coords': 'Koordinaten:',
-    'gallery.coordsNA': 'N/A',
-    'gallery.coordsUnavailable': 'Koordinaten: nicht verfügbar',
-    'gallery.coordsLoading': 'Koordinaten: laden...',
-    'gallery.dateLoading': 'Datum laden...',
-    'gallery.dateUnavailable': 'nicht verfügbar',
-    'gallery.uploadedBy': 'Hochgeladen von:',
-    'gallery.viewBtn': 'Anzeigen',
-    'gallery.deleteBtn': 'Löschen',
-    'gallery.editBtn': 'Bearbeiten',
-    'gallery.editTitle': 'Bild bearbeiten',
-    'gallery.editSave': 'Speichern',
-    'gallery.editCancel': 'Abbrechen',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Speichern',
-    'comment.editCancel': 'Abbrechen',
-    'gallery.deleteConfirm': 'Möchten Sie dieses Bild wirklich löschen?',
-    'gallery.memory': 'Erinnerung',
-    'comment.toggle': 'Kommentare',
-    'comment.singular': 'Kommentar',
-    'comment.plural': 'Kommentare',
-    'comment.loading': 'Laden…',
-    'comment.none': 'Noch keine Kommentare.',
-    'comment.error': 'Fehler beim Laden der Kommentare.',
-    'comment.placeholder': 'Kommentar schreiben…',
-    'comment.namePlaceholder': 'Ihr Name *',
-    'comment.emailPlaceholder': 'Ihre E-Mail *',
-    'comment.btn': 'Senden',
-    'comment.anonAlert': 'Bitte Name und E-Mail ausfüllen, um zu kommentieren.',
-    'comment.sendError': 'Fehler beim Senden des Kommentars.',
-    'comment.deleteConfirm': 'Diesen Kommentar löschen?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Betrachter',
-    'comment.roleCommenter': 'Kommentator',
-    'comment.roleAnonymous': 'Gast',
-    'modal.title': 'Bildansicht',
-    'modal.hint': 'Klicken Sie außerhalb oder verwenden Sie die Schaltfläche zum Schließen.',
-    'upload.privateLabel': 'Nur für mich veröffentlichen (privates Bild)',
-    'upload.privateBadge': '🔒 Privat',
-    'qr.title': '🔗 QR-Code-Zugang',
-    'qr.subtitle': 'Mit Besuchern teilen für direkten Zugang',
-    'qr.btn': 'QR-Code generieren',
-    'qr.modalTitle': '📱 Zugangs-QR-Code',
-    'qr.modalSub': 'Scannen zum Einloggen als Besucher',
-    'qr.copy': 'Kopieren',
-    'qr.copied': 'Kopiert!',
-    'qr.keyMissing': 'QR_ACCESS_KEY nicht in .env konfiguriert.',
-    'qr.fetchError': 'Fehler beim Abrufen des QR-Schlüssels',
-    'map.title': '📍 Standort',
-    'map.openLink': '🗺️ In Karte öffnen',
-    'edit.saveError': 'Fehler beim Speichern der Änderungen.',
-  },
-  es: {
-    flag: '🇪🇸',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Inicio',
-    'nav.newImage': 'Nueva imagen',
-    'nav.login': 'Iniciar sesión',
-    'nav.ddLogin': '🔐 Entrar',
-    'nav.ddLogout': '🚪 Salir',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Cruzar los océanos es mucho más que coleccionar sellos en el pasaporte; se trata de las conexiones que anclan en nuestro corazón. Nuestro viaje por el World Cruise ha sido un mosaico de culturas, sabores y sonrisas compartidas.',
-    'hero.p2': 'A los nuevos amigos y al impecable equipo que convirtió el barco en nuestro hogar: ¡muchas gracias! No solo cuidaron cada detalle, sino que le dieron alma a nuestros días en alta mar, haciendo todo más divertido.',
-    'hero.p3': 'Dejemos nuestro mensaje a quienes nos recibieron con excelencia.',
-    'login.title': 'Entrar',
-    'login.subtitle': 'Inicia sesión para subir y ver tus fotos.',
-    'login.userPlaceholder': 'Usuario',
-    'login.passPlaceholder': 'Contraseña',
-    'login.btn': 'Entrar',
-    'login.btnLoading': 'Entrando…',
-    'login.errorMsg': 'Error al iniciar sesión.',
-    'login.connectedAs': 'Conectado como',
-    'login.logoutBtn': 'Salir',
-    'stats.images': '🖼️ Fotos',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Deja tu mensaje.',
-    'stats.imagesSub': 'disponibles para visualizar',
-    'stats.commentsSub': 'elogios y mensajes',
-    'stats.comments': '💬 Comentarios',
-    'upload.title': 'Subir imagen',
-    'upload.drag': 'Arrastra tu imagen aquí',
-    'upload.dragSub': 'o haz clic para seleccionar',
-    'upload.removeBtn': 'Quitar',
-    'upload.datePlaceholder': 'Fecha de la foto',
-    'upload.locationPlaceholder': 'Lugar (ej: Playa de Copacabana)',
-    'upload.summaryPlaceholder': 'Resumen de la imagen',
-    'upload.btn': 'Enviar imagen',
-    'upload.sending': 'Enviando imagen…',
-    'upload.successToast': '✅ ¡Imagen enviada con éxito!',
-    'upload.errorMsg': 'Error al enviar la imagen.',
-    'upload.errorHeic': 'Error al procesar la imagen HEIC.',
-    'gallery.title': 'Galería',
-    'gallery.subtitle': 'Ve las imágenes subidas y deja tu comentario.',
-    'gallery.empty': 'No se encontraron imágenes.',
-    'gallery.filterAll': 'Todos',
-    'gallery.noLocation': 'Lugar no informado',
-    'gallery.noDescription': 'Sin descripción',
-    'gallery.coords': 'Coordenadas:',
-    'gallery.coordsNA': 'N/A',
-    'gallery.coordsUnavailable': 'Coordenadas: no disponibles',
-    'gallery.coordsLoading': 'Coordenadas: cargando...',
-    'gallery.dateLoading': 'cargando fecha...',
-    'gallery.dateUnavailable': 'no disponible',
-    'gallery.uploadedBy': 'Subido por:',
-    'gallery.viewBtn': 'Ver',
-    'gallery.deleteBtn': 'Eliminar',
-    'gallery.editBtn': 'Editar',
-    'gallery.editTitle': 'Editar imagen',
-    'gallery.editSave': 'Guardar',
-    'gallery.editCancel': 'Cancelar',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Guardar',
-    'comment.editCancel': 'Cancelar',
-    'gallery.deleteConfirm': '¿Desea realmente eliminar esta imagen?',
-    'gallery.memory': 'Recuerdo',
-    'comment.toggle': 'Comentarios',
-    'comment.singular': 'comentario',
-    'comment.plural': 'comentarios',
-    'comment.loading': 'Cargando…',
-    'comment.none': 'Aún no hay comentarios.',
-    'comment.error': 'Error al cargar comentarios.',
-    'comment.placeholder': 'Escribe tu comentario…',
-    'comment.namePlaceholder': 'Tu nombre *',
-    'comment.emailPlaceholder': 'Tu correo *',
-    'comment.btn': 'Enviar',
-    'comment.anonAlert': 'Por favor, completa tu nombre y correo para comentar.',
-    'comment.sendError': 'Error al enviar el comentario.',
-    'comment.deleteConfirm': '¿Eliminar este comentario?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Espectador',
-    'comment.roleCommenter': 'Comentarista',
-    'comment.roleAnonymous': 'Visitante',
-    'modal.title': 'Ver imagen',
-    'modal.hint': 'Haz clic fuera o usa el botón de cerrar.',
-    'upload.privateLabel': 'Publicar solo para mí (imagen privada)',
-    'upload.privateBadge': '🔒 Privado',
-    'qr.title': '🔗 Acceso por código QR',
-    'qr.subtitle': 'Comparte con visitantes para acceso directo',
-    'qr.btn': 'Generar QR',
-    'qr.modalTitle': '📱 Código QR de acceso',
-    'qr.modalSub': 'Escanea para entrar como visitante',
-    'qr.copy': 'Copiar',
-    'qr.copied': '¡Copiado!',
-    'qr.keyMissing': 'QR_ACCESS_KEY no configurada en el .env del servidor.',
-    'qr.fetchError': 'Error al obtener clave QR',
-    'map.title': '📍 Ubicación',
-    'map.openLink': '🗺️ Abrir en mapa',
-    'edit.saveError': 'Error al guardar cambios.',
-  },
-  fr: {
-    flag: '🇫🇷',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Accueil',
-    'nav.newImage': 'Nouvelle image',
-    'nav.login': 'Connexion',
-    'nav.ddLogin': '🔐 Se connecter',
-    'nav.ddLogout': '🚪 Se déconnecter',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Traverser les océans, c\'est bien plus que collectionner des tampons sur un passeport ; c\'est une question de liens qui s\'ancrent dans nos cœurs. Notre voyage en World Cruise a été une mosaïque de cultures, de saveurs et de sourires partagés.',
-    'hero.p2': 'À nos nouveaux amis et à l\'équipe impeccable qui a transformé le navire en notre maison : merci infiniment ! Vous avez non seulement soigné chaque détail, mais vous avez donné une âme à nos journées en mer, rendant tout plus joyeux.',
-    'hero.p3': 'Laissons notre message à ceux qui nous ont accueillis avec excellence.',
-    'login.title': 'Connexion',
-    'login.subtitle': 'Connectez-vous pour envoyer et voir vos photos.',
-    'login.userPlaceholder': 'Nom d\'utilisateur',
-    'login.passPlaceholder': 'Mot de passe',
-    'login.btn': 'Se connecter',
-    'login.btnLoading': 'Connexion…',
-    'login.errorMsg': 'Erreur de connexion.',
-    'login.connectedAs': 'Connecté en tant que',
-    'login.logoutBtn': 'Se déconnecter',
-    'stats.images': '🖼️ Photos',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Laissez votre message.',
-    'stats.imagesSub': 'disponibles à visualiser',
-    'stats.commentsSub': 'compliments et messages',
-    'stats.comments': '💬 Commentaires',
-    'upload.title': 'Envoyer une image',
-    'upload.drag': 'Faites glisser votre image ici',
-    'upload.dragSub': 'ou cliquez pour sélectionner',
-    'upload.removeBtn': 'Supprimer',
-    'upload.datePlaceholder': 'Date de la photo',
-    'upload.locationPlaceholder': 'Lieu (ex : Plage de Copacabana)',
-    'upload.summaryPlaceholder': 'Résumé de l\'image',
-    'upload.btn': 'Envoyer l\'image',
-    'upload.sending': 'Envoi de l\'image…',
-    'upload.successToast': '✅ Image envoyée avec succès !',
-    'upload.errorMsg': 'Erreur lors de l\'envoi de l\'image.',
-    'upload.errorHeic': 'Erreur lors du traitement de l\'image HEIC.',
-    'gallery.title': 'Galerie',
-    'gallery.subtitle': 'Consultez les images envoyées et laissez un commentaire.',
-    'gallery.empty': 'Aucune image trouvée.',
-    'gallery.filterAll': 'Tous',
-    'gallery.noLocation': 'Lieu non renseigné',
-    'gallery.noDescription': 'Aucune description',
-    'gallery.coords': 'Coordonnées :',
-    'gallery.coordsNA': 'N/A',
-    'gallery.coordsUnavailable': 'Coordonnées : non disponibles',
-    'gallery.coordsLoading': 'Coordonnées : chargement...',
-    'gallery.dateLoading': 'chargement de la date...',
-    'gallery.dateUnavailable': 'non disponible',
-    'gallery.uploadedBy': 'Envoyé par :',
-    'gallery.viewBtn': 'Afficher',
-    'gallery.deleteBtn': 'Supprimer',
-    'gallery.editBtn': 'Modifier',
-    'gallery.editTitle': "Modifier l'image",
-    'gallery.editSave': 'Enregistrer',
-    'gallery.editCancel': 'Annuler',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Enregistrer',
-    'comment.editCancel': 'Annuler',
-    'gallery.deleteConfirm': 'Voulez-vous vraiment supprimer cette image ?',
-    'gallery.memory': 'Souvenir',
-    'comment.toggle': 'Commentaires',
-    'comment.singular': 'commentaire',
-    'comment.plural': 'commentaires',
-    'comment.loading': 'Chargement…',
-    'comment.none': 'Aucun commentaire pour l\'instant.',
-    'comment.error': 'Erreur lors du chargement des commentaires.',
-    'comment.placeholder': 'Écrivez votre commentaire…',
-    'comment.namePlaceholder': 'Votre nom *',
-    'comment.emailPlaceholder': 'Votre e-mail *',
-    'comment.btn': 'Envoyer',
-    'comment.anonAlert': 'Veuillez renseigner votre nom et e-mail pour commenter.',
-    'comment.sendError': 'Erreur lors de l\'envoi du commentaire.',
-    'comment.deleteConfirm': 'Supprimer ce commentaire ?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Spectateur',
-    'comment.roleCommenter': 'Commentateur',
-    'comment.roleAnonymous': 'Visiteur',
-    'modal.title': 'Visualisation de l\'image',
-    'modal.hint': 'Cliquez à l\'extérieur ou utilisez le bouton de fermeture.',
-    'upload.privateLabel': 'Publier uniquement pour moi (image privée)',
-    'upload.privateBadge': '🔒 Privé',
-    'qr.title': '🔗 Accès par QR Code',
-    'qr.subtitle': 'Partagez avec les visiteurs pour un accès direct',
-    'qr.btn': 'Générer le QR Code',
-    'qr.modalTitle': '📱 QR Code d’accès',
-    'qr.modalSub': 'Scannez pour vous connecter en tant que visiteur',
-    'qr.copy': 'Copier',
-    'qr.copied': 'Copié !',
-    'qr.keyMissing': 'QR_ACCESS_KEY non configurée dans le .env du serveur.',
-    'qr.fetchError': 'Erreur lors de la récupération de la clé QR',
-    'map.title': '📍 Localisation',
-    'map.openLink': '🗺️ Ouvrir dans la carte',
-    'edit.saveError': 'Erreur lors de l’enregistrement des modifications.',
-  },
-  it: {
-    flag: '🇮🇹',
-    brand: '📸 Scrapbook World Cruise 2026',
-    'nav.home': 'Home',
-    'nav.newImage': 'Nuova immagine',
-    'nav.login': 'Accesso',
-    'nav.ddLogin': '🔐 Accedi',
-    'nav.ddLogout': '🚪 Esci',
-    'hero.title': 'Scrapbook World Cruise Crew',
-    'hero.p1': 'Attraversare gli oceani è molto più che collezionare timbri sul passaporto; si tratta dei legami che si ancorano nel nostro cuore. Il nostro viaggio nel World Cruise è stato un mosaico di culture, sapori e sorrisi condivisi.',
-    'hero.p2': 'Ai nuovi amici e all’impeccabile squadra che ha trasformato la nave nella nostra casa: grazie di cuore! Non solo avete curato ogni dettaglio, ma avete dato un’anima alle nostre giornate in mare aperto, rendendo tutto più gioioso.',
-    'hero.p3': 'Lasciamo il nostro messaggio a chi ci ha accolto con eccellenza.',
-    'login.title': 'Accedi',
-    'login.subtitle': 'Accedi per caricare e vedere le tue foto.',
-    'login.userPlaceholder': 'Utente',
-    'login.passPlaceholder': 'Password',
-    'login.btn': 'Accedi',
-    'login.btnLoading': 'Accesso in corso…',
-    'login.errorMsg': 'Errore di accesso.',
-    'login.connectedAs': 'Connesso come',
-    'login.logoutBtn': 'Esci',
-    'stats.images': '🖼️ Foto',
-    'stats.members': '👥 Crew Members',
-    'stats.title': 'Lascia il tuo messaggio.',
-    'stats.imagesSub': 'disponibili per la visualizzazione',
-    'stats.commentsSub': 'complimenti e messaggi',
-    'stats.comments': '💬 Commenti',
-    'upload.title': 'Carica immagine',
-    'upload.drag': 'Trascina la tua immagine qui',
-    'upload.dragSub': 'o clicca per selezionare',
-    'upload.removeBtn': 'Rimuovi',
-    'upload.datePlaceholder': 'Data della foto',
-    'upload.locationPlaceholder': 'Luogo (es: Spiaggia di Copacabana)',
-    'upload.summaryPlaceholder': 'Descrizione dell’immagine',
-    'upload.btn': 'Invia immagine',
-    'upload.sending': 'Caricamento immagine…',
-    'upload.successToast': '✅ Immagine inviata con successo!',
-    'upload.errorMsg': 'Errore durante l’invio dell’immagine.',
-    'upload.errorHeic': 'Errore durante l’elaborazione dell’immagine HEIC.',
-    'gallery.title': 'Galleria',
-    'gallery.subtitle': 'Visualizza le immagini caricate e lascia un commento.',
-    'gallery.empty': 'Nessuna immagine trovata.',
-    'gallery.filterAll': 'Tutti',
-    'gallery.noLocation': 'Luogo non specificato',
-    'gallery.noDescription': 'Nessuna descrizione',
-    'gallery.coords': 'Coordinate:',
-    'gallery.coordsNA': 'N/D',
-    'gallery.coordsUnavailable': 'Coordinate: non disponibili',
-    'gallery.coordsLoading': 'Coordinate: caricamento...',
-    'gallery.dateLoading': 'caricamento data...',
-    'gallery.dateUnavailable': 'non disponibile',
-    'gallery.uploadedBy': 'Caricato da:',
-    'gallery.viewBtn': 'Visualizza',
-    'gallery.deleteBtn': 'Elimina',
-    'gallery.editBtn': 'Modifica',
-    'gallery.editTitle': 'Modifica immagine',
-    'gallery.editSave': 'Salva',
-    'gallery.editCancel': 'Annulla',
-    'comment.editBtn': '✏️',
-    'comment.editSave': 'Salva',
-    'comment.editCancel': 'Annulla',
-    'gallery.deleteConfirm': 'Vuoi davvero eliminare questa immagine?',
-    'gallery.memory': 'Ricordo',
-    'comment.toggle': 'Commenti',
-    'comment.singular': 'commento',
-    'comment.plural': 'commenti',
-    'comment.loading': 'Caricamento…',
-    'comment.none': 'Nessun commento ancora.',
-    'comment.error': 'Errore nel caricamento dei commenti.',
-    'comment.placeholder': 'Scrivi il tuo commento…',
-    'comment.namePlaceholder': 'Il tuo nome *',
-    'comment.emailPlaceholder': 'La tua e-mail *',
-    'comment.btn': 'Invia',
-    'comment.anonAlert': 'Inserisci il tuo nome e la tua e-mail per commentare.',
-    'comment.sendError': 'Errore durante l’invio del commento.',
-    'comment.deleteConfirm': 'Eliminare questo commento?',
-    'comment.roleAdmin': 'Admin',
-    'comment.roleViewer': 'Spettatore',
-    'comment.roleCommenter': 'Commentatore',
-    'comment.roleAnonymous': 'Ospite',
-    'modal.title': 'Visualizzazione immagine',
-    'modal.hint': 'Clicca fuori o usa il pulsante di chiusura.',
-    'upload.privateLabel': 'Pubblica solo per me (immagine privata)',
-    'upload.privateBadge': '🔒 Privato',
-    'qr.title': '🔗 Accesso tramite QR Code',
-    'qr.subtitle': 'Condividi con i visitatori per accesso diretto',
-    'qr.btn': 'Genera QR Code',
-    'qr.modalTitle': '📱 QR Code di accesso',
-    'qr.modalSub': 'Scannerizza per accedere come visitatore',
-    'qr.copy': 'Copia',
-    'qr.copied': 'Copiato!',
-    'qr.keyMissing': 'QR_ACCESS_KEY non configurata nel .env del server.',
-    'qr.fetchError': 'Errore nel recupero della chiave QR',
-    'map.title': '📍 Posizione',
-    'map.openLink': '🗺️ Apri nella mappa',
-    'edit.saveError': 'Errore nel salvataggio delle modifiche.',
-  },
-};
-
-let currentLang = localStorage.getItem('lang') || 'pt';
-
-function t(key) {
-  return (translations[currentLang] || translations['pt'])[key] || key;
-}
-
-// Busca e exibe o resumo de imagens e comentarios
-async function loadStats() {
-  try {
-    const res  = await fetch('/stats');
-    if (!res.ok) return;
-    const data = await res.json();
-    const imgEl   = document.getElementById('stats-images');
-    const comEl   = document.getElementById('stats-comments');
-    const lblEl   = document.getElementById('stats-images-label');
-    if (imgEl) imgEl.textContent = data.images  ?? '-';
-    if (comEl) comEl.textContent = data.comments ?? '-';
-    // Troca label conforme role: admin ve 'Fotos', outros veem 'Crew Members'
-    if (lblEl) {
-      const isAdmin = currentUser?.role === 'admin';
-      lblEl.setAttribute('data-i18n', isAdmin ? 'stats.images' : 'stats.members');
-      lblEl.textContent = isAdmin ? t('stats.images') : t('stats.members');
-    }
-    // Animacao de contagem
-    [{ el: imgEl, val: data.images }, { el: comEl, val: data.comments }].forEach(({ el, val }) => {
-      if (!el || !val) return;
-      let start = 0; const step = Math.ceil(val / 30);
-      const timer = setInterval(() => {
-        start = Math.min(start + step, val);
-        el.textContent = start;
-        if (start >= val) clearInterval(timer);
-      }, 30);
-    });
-  } catch (e) { console.warn('Stats error:', e); }
-}
-
-// Mostra o toggle de imagem privada apenas para admins
-function updatePrivateToggleVisibility() {
-  const wrapper = document.getElementById('private-toggle-wrapper');
-  if (!wrapper) return;
-  const isAdmin = document.body.dataset.role === 'admin';
-  wrapper.style.display = isAdmin ? 'block' : 'none';
-}
-
-function applyLanguage(lang) {
-  const dict = translations[lang] || translations['pt'];
-
-  // textContent
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (dict[key] !== undefined) el.textContent = dict[key];
-  });
-
-  // placeholders
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    if (dict[key] !== undefined) el.placeholder = dict[key];
-  });
-
-  // bandeira no botão
-  const flagEl = document.getElementById('lang-flag');
-  if (flagEl && dict['flag']) flagEl.textContent = dict['flag'];
-
-  // lang no <html>
-  document.documentElement.lang = lang;
-
-  // re-renderiza a galeria para aplicar as strings dinâmicas
-  if (imagesCache.length > 0) {
-    renderGallery(imagesCache);
-    renderLocationFilter(imagesCache);
-  }
-}
-
-function setLanguage(lang) {
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  applyLanguage(lang);
-}
-
-// ─── App state ────────────────────────────────────────────────────────────────
-let currentUser = null;
-let imagesCache = [];
-let currentLocationFilter = 'all';
-let currentSort = 'comments';
-
-const authPanel             = document.getElementById('auth-panel');
-const uploadPanel           = document.getElementById('admin-actions');
-const locationFilterButtons = document.getElementById('location-filter-buttons');
-const sortSelect = document.getElementById('sort-select');
-if (sortSelect) {
-  sortSelect.addEventListener('change', () => {
-    currentSort = sortSelect.value;
-    renderGallery(imagesCache);
-  });
-}
-const photoDateInput        = document.getElementById('photoDate');
-
-const imageModalEl   = document.getElementById('imageModalBootstrap');
-const imageModal     = new bootstrap.Modal(imageModalEl);
-
-// ─── Auth ─────────────────────────────────────────────────────────────────────
-async function refreshAuth() {
-  const res  = await fetch('/auth-status');
-  const data = await res.json();
-  currentUser = data.user;
-  renderAuth();
-  await loadImages();
-}
-
-function renderAuth() {
-  const loggedOut     = document.getElementById('logged-out');
-  const loggedIn      = document.getElementById('logged-in');
-  const currentUserEl = document.getElementById('current-user');
-  const currentRoleEl = document.getElementById('current-role');
-  const adminActions  = document.getElementById('admin-actions');
-  const labelEl       = document.getElementById('auth-dropdown-label');
-  const ddLoginItem   = document.getElementById('dd-login-item');
-  const ddLogoutItem  = document.getElementById('dd-logout-item');
-
-  if (currentUser) {
-    loggedOut.style.display   = 'none';
-    loggedIn.style.display    = 'block';
-    currentUserEl.textContent = currentUser.username;
-    currentRoleEl.textContent = currentUser.role;
-
-    const canUpload = currentUser.role === 'admin';
-    adminActions.style.display = canUpload ? 'block' : 'none';
-    document.body.dataset.role = currentUser.role;
-    updatePrivateToggleVisibility();
-    loadStats();
-
-    const newImageBtn = document.getElementById('new-image-btn');
-    if (newImageBtn) newImageBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
-
-    if (authPanel) authPanel.style.display = 'block'; // sempre visivel quando logado
-
-    labelEl.textContent        = currentUser.username;
-    ddLoginItem.style.display  = 'none';
-    ddLogoutItem.style.display = '';
-  } else {
-    loggedOut.style.display    = 'block';
-    loggedIn.style.display     = 'none';
-    adminActions.style.display = 'none';
-
-    labelEl.textContent        = t('nav.login');
-    ddLoginItem.style.display  = '';
-    ddLogoutItem.style.display = 'none';
-
-    const newImageBtn = document.getElementById('new-image-btn');
-    if (newImageBtn) newImageBtn.style.display = 'none';
-  }
-}
-
-function openLoginArea() {
-  if (authPanel) { authPanel.style.display = 'block'; authPanel.scrollIntoView({ behavior: 'smooth' }); }
-}
-function openUploadArea() {
-  if (!currentUser) { openLoginArea(); return; }
-  if (uploadPanel) { uploadPanel.style.display = 'block'; uploadPanel.scrollIntoView({ behavior: 'smooth' }); }
-}
-function goHome() {
-  if (authPanel) authPanel.style.display = currentUser ? 'block' : 'none';
-  if (uploadPanel && currentUser?.role !== 'admin') uploadPanel.style.display = 'none';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ─── Login / Logout ───────────────────────────────────────────────────────────
-async function handleLogin(event) {
-  event.preventDefault();
-  const form = event.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const errorEl = document.getElementById('auth-error');
-
-  // Captura os dados ANTES de desabilitar os campos (inputs disabled são ignorados pelo FormData)
-  const formData = new FormData(form);
-
-  // Bloqueia o formulário e mostra estado de carregamento
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>' + t('login.btnLoading');
-  form.querySelectorAll('input').forEach(i => i.disabled = true);
-  errorEl.textContent = '';
-
-  try {
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: formData.get('username'), password: formData.get('password') }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-      errorEl.textContent = data.error || t('login.errorMsg');
-      return;
-    }
-
-    currentUser = data.user;
-    renderAuth();
-    loadImages();
-  } catch {
-    errorEl.textContent = t('login.errorMsg');
-  } finally {
-    // Restaura o formulário em qualquer caso (erro ou sucesso)
-    submitBtn.disabled = false;
-    submitBtn.textContent = t('login.btn');
-    form.querySelectorAll('input').forEach(i => i.disabled = false);
-  }
-}
-
-async function handleLogout() {
-  await fetch('/logout', { method: 'POST' });
-  currentUser = null;
-  renderAuth();
-  await loadImages();
-}
-
-// ─── Upload ───────────────────────────────────────────────────────────────────
-async function handleUpload(event) {
-  event.preventDefault();
-  const form = event.target;
-  const fileInput = form.querySelector('input[name="photo"]');
-  if (!fileInput.files[0]) return;
-  const overlay = document.getElementById('upload-overlay');
-  overlay.classList.add('active');
-  try {
-    const originalFile = fileInput.files[0];
-    const isHeic = originalFile.type === 'image/heic' || originalFile.name.toLowerCase().endsWith('.heic');
-
-    // Para HEIC: extrai GPS antes de converter (a conversao remove metadados)
-    let heicGps = null;
-    if (isHeic) {
-      heicGps = await extractHeicGps(originalFile);
-      console.log('GPS extraido do HEIC no frontend:', heicGps);
-    }
-
-    // Converte HEIC para JPEG no frontend (sharp no servidor nao suporta HEIC)
-    const file = await convertHeicIfNeeded(originalFile);
-    const formData = new FormData();
-    formData.append('photo', file);
-    formData.append('summary', form.querySelector('input[name="summary"]').value || '');
-    formData.append('location', form.querySelector('input[name="location"]').value || '');
-    formData.append('photoDate', form.querySelector('input[name="photoDate"]').value || '');
-    const privateCheck = form.querySelector('input[name="private"]');
-    formData.append('private', privateCheck?.checked ? 'true' : 'false');
-    if (heicGps?.lat && heicGps?.lng) {
-      formData.append('gpsLat', heicGps.lat);
-      formData.append('gpsLng', heicGps.lng);
-    }
-    const res = await fetch('/upload', { method: 'POST', body: formData });
-    if (res.ok) { form.reset(); loadImages(); resetUploadArea(); }
-    else { alert(t('upload.errorMsg')); }
-  } catch (err) {
-    alert(t('upload.errorHeic'));
-  } finally {
-    overlay.classList.remove('active');
-    resetUploadArea();
-  }
-}
-
-// ─── Gallery ──────────────────────────────────────────────────────────────────
-let commentCountsCache = {}; // { [imageKey]: count }
-
-async function loadImages() {
-  try {
-    // Busca imagens e contagens em paralelo
-    const [imagesRes, countsRes] = await Promise.all([
-      fetch('/images'),
-      currentUser ? fetch('/comments/counts') : Promise.resolve(null),
-    ]);
-
-    const raw = await imagesRes.json();
-
-    // Contagens só disponíveis para usuarios logados
-    commentCountsCache = countsRes ? await countsRes.json() : {};
-
-    // Ordena: maior numero de comentarios primeiro; empate mantem ordem original
-    imagesCache = [...raw].sort((a, b) => {
-      const ca = commentCountsCache[a.key] || 0;
-      const cb = commentCountsCache[b.key] || 0;
-      return cb - ca;
-    });
-
-    renderGallery(imagesCache);
-    renderLocationFilter(imagesCache);
-  } catch {
-    document.getElementById('gallery').innerHTML = '';
-    document.getElementById('empty-gallery').style.display = 'block';
-  }
-}
-
-function renderLocationFilter(images) {
-  const locations = [...new Set(images.map(i => i.location).filter(Boolean))];
-  locationFilterButtons.innerHTML = '';
-  if (locations.length === 0) return;
-
-  const allBtn = document.createElement('button');
-  allBtn.className = `btn btn-sm ${currentLocationFilter === 'all' ? 'btn-primary' : 'btn-outline-secondary'}`;
-  allBtn.textContent = t('gallery.filterAll');
-  allBtn.addEventListener('click', () => { currentLocationFilter = 'all'; renderGallery(imagesCache); renderLocationFilter(imagesCache); });
-  locationFilterButtons.appendChild(allBtn);
-
-  locations.forEach(loc => {
-    const btn = document.createElement('button');
-    btn.className = `btn btn-sm ${currentLocationFilter === loc ? 'btn-primary' : 'btn-outline-secondary'}`;
-    btn.textContent = loc;
-    btn.addEventListener('click', () => { currentLocationFilter = loc; renderGallery(imagesCache); renderLocationFilter(imagesCache); });
-    locationFilterButtons.appendChild(btn);
-  });
-}
-
-async function renderGallery(images) {
-  const gallery    = document.getElementById('gallery');
-  const emptyState = document.getElementById('empty-gallery');
-  gallery.innerHTML = '';
-  // Ordena conforme seleção do usuário
-  const sorted = [...images].sort((a, b) => {
-    if (currentSort === 'newest') {
-      return new Date(b.photoDate || b.uploadDate || 0) - new Date(a.photoDate || a.uploadDate || 0);
-    } else if (currentSort === 'oldest') {
-      return new Date(a.photoDate || a.uploadDate || 0) - new Date(b.photoDate || b.uploadDate || 0);
-    } else {
-      // comments: usa a ordem já definida em imagesCache (mais comentados primeiro)
-      return 0;
-    }
-  });
-
-  const filtered = currentLocationFilter === 'all' ? sorted : sorted.filter(i => i.location === currentLocationFilter);
-  if (filtered.length === 0) { emptyState.style.display = 'block'; return; }
-  emptyState.style.display = 'none';
-
-  // Calcula posição no ranking global (entre todas as imagens com comentarios)
-  const rankingOrder = [...imagesCache]
-    .filter(i => (commentCountsCache[i.key] || 0) > 0)
-    .sort((a, b) => (commentCountsCache[b.key] || 0) - (commentCountsCache[a.key] || 0));
-
-  filtered.forEach(async img => {
-    const safeId = img.key.replace(/[^a-zA-Z0-9]/g, '_');
-    const column = document.createElement('div');
-    column.className = 'col';
-
-    const post = document.createElement('article');
-    post.className = 'card h-100 gallery-card';
-
-    // Badge de ranking
-    const commentCount = commentCountsCache[img.key] || 0;
-    const rankPos = rankingOrder.findIndex(i => i.key === img.key); // -1 se sem comentarios
-    const rankIcons = ['🥇', '🥈', '🥉'];
-    const rankClasses = ['rank-1st', 'rank-2nd', 'rank-3rd'];
-
-    let badgeHtml = '';
-    if (commentCount > 0) {
-      const icon = rankPos < 3 ? rankIcons[rankPos] : '💬';
-      const cls  = rankPos < 3 ? rankClasses[rankPos] : '';
-      const label = commentCount === 1
-        ? `1 ${t('comment.singular')}`
-        : `${commentCount} ${t('comment.plural')}`;
-      badgeHtml = `<span class="card-rank-badge ${cls}"><span class="rank-icon">${icon}</span>${label}</span>`;
-    }
-
-    // Header
-    const header = document.createElement('div');
-    header.className = 'd-flex align-items-center gap-3 px-3 pt-3';
-    header.innerHTML = `
-      <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width:36px;height:36px;">S</div>
-      <div><strong class="d-block">ScrapBook</strong><small class="text-muted">${t('gallery.memory')}</small></div>
-      ${badgeHtml}
-    `;
-    post.appendChild(header);
-
-    // Image
-    const imageWrapper = document.createElement('div');
-    imageWrapper.className = 'card-img-container';
-    const image = document.createElement('img');
-    image.src = img.url; image.alt = img.key; image.loading = 'lazy';
-    image.style.cursor = 'zoom-in';
-    image.addEventListener('click', () => openModal(img.url, img.key));
-    imageWrapper.appendChild(image);
-    post.appendChild(imageWrapper);
-
-    // Info
-    const info = document.createElement('div');
-    info.className = 'card-body d-flex flex-column';
-    info.innerHTML = `
-      <h3 class="h5 mb-2" id="title-${safeId}">
-        ${img.location || t('gallery.noLocation')} <span class="text-muted">— ${t('gallery.dateLoading')}</span>
-      </h3>
-      <p class="text-secondary mb-3">${img.summary || t('gallery.noDescription')}</p>
-      <div class="row g-2 mb-3">
-        <div class="col-12 meta-item" id="coords-${safeId}">${t('gallery.coordsLoading')}</div>
-        ${img.uploadedBy ? `<div class="col-12 meta-item text-muted small">${t('gallery.uploadedBy')} ${img.uploadedBy}</div>` : ''}
-      </div>
-    `;
-    post.appendChild(info);
-
-    // Footer: botões
-    const footer = document.createElement('div');
-    footer.className = 'card-footer bg-transparent border-0 pt-0 pb-3 px-3';
-
-    const viewButton = document.createElement('button');
-    viewButton.className = 'btn btn-primary btn-sm me-2';
-    viewButton.textContent = t('gallery.viewBtn');
-    viewButton.addEventListener('click', e => { e.stopPropagation(); openModal(img.url, img.key); });
-    footer.appendChild(viewButton);
-
-    const isAdmin = currentUser?.role === 'admin';
-    if (isAdmin) {
-      const editButton = document.createElement('button');
-      editButton.className = 'btn btn-outline-secondary btn-sm me-1';
-      editButton.textContent = t('gallery.editBtn');
-      editButton.addEventListener('click', e => { e.stopPropagation(); openEditModal(img); });
-      footer.appendChild(editButton);
-
-      const deleteButton = document.createElement('button');
-      deleteButton.className = 'btn btn-outline-danger btn-sm';
-      deleteButton.textContent = t('gallery.deleteBtn');
-      deleteButton.addEventListener('click', async e => {
-        e.stopPropagation();
-        if (!confirm(t('gallery.deleteConfirm'))) return;
-        await fetch(`/images?key=${encodeURIComponent(img.key)}`, { method: 'DELETE' });
-        loadImages();
-      });
-      footer.appendChild(deleteButton);
-    }
-    post.appendChild(footer);
-
-    // Comentários
-    const commentsSection = buildCommentsSection(img.key, safeId);
-    post.appendChild(commentsSection);
-
-    column.appendChild(post);
-    gallery.appendChild(column);
-
-    // EXIF async — apenas para data (GPS agora vem do servidor via img.gps)
-    const titleEl  = document.getElementById(`title-${safeId}`);
-    const coordsEl = document.getElementById(`coords-${safeId}`);
-
-    let dateValue = t('gallery.dateUnavailable');
-    if (img.photoDate) {
-      dateValue = formatExifDate(img.photoDate);
-    } else {
-      // tenta ler data EXIF da imagem como fallback
-      const meta = await extractImageMetadata(img.url);
-      if (meta) {
-        const exifDate = meta.DateTimeOriginal || meta.DateTime || meta.DateTimeDigitized;
-        if (exifDate) dateValue = formatExifDate(exifDate);
-      }
-    }
-
-    if (titleEl) {
-      titleEl.innerHTML = `
-        <div class="card-title-modern">
-          <span class="card-date">${dateValue}</span>
-          <span class="card-location">${img.location || t('gallery.noLocation')}</span>
-          ${img.private ? `<span class="badge" style="background:#fef3c7;color:#92400e;font-size:.65rem;font-weight:700;border-radius:.5rem;padding:2px 7px;">${t('upload.privateBadge')}</span>` : ''}
-        </div>`;
-    }
-
-    // Coordenadas: usa img.gps salvo no servidor (fonte confiável)
-    if (coordsEl) {
-      if (img.gps?.lat != null && img.gps?.lng != null) {
-        coordsEl.style.cursor = 'pointer';
-        coordsEl.title = 'Clique para ver no mapa';
-        coordsEl.innerHTML = `
-          <span style="color:#6366f1;font-weight:600;">📍 ${t('gallery.coords')}</span>
-          <span style="font-family:monospace;">${img.gps.lat}, ${img.gps.lng}</span>
-          <span style="float:right;font-size:0.75rem;color:#6366f1;">ver mapa ↗</span>
-        `;
-        coordsEl.addEventListener('click', () => openMapModal(img.gps.lat, img.gps.lng, img.location));
-      } else {
-        coordsEl.textContent = t('gallery.coordsUnavailable');
-      }
-    }
-  });
-}
-
-// Edit modal
-const editModalEl = document.getElementById('editModal');
-const editModal   = new bootstrap.Modal(editModalEl);
-
-function openEditModal(img) {
-  document.getElementById('edit-key').value      = img.key;
-  document.getElementById('edit-location').value = img.location || '';
-  document.getElementById('edit-summary').value  = img.summary  || '';
-  document.getElementById('edit-private').checked = !!img.private;
-  const d = img.photoDate ? new Date(img.photoDate) : null;
-  document.getElementById('edit-date').value = d ? d.toISOString().slice(0,10) : '';
-  editModal.show();
-}
-
-document.getElementById('edit-save-btn').addEventListener('click', async () => {
-  const key       = document.getElementById('edit-key').value;
-  const location  = document.getElementById('edit-location').value;
-  const summary   = document.getElementById('edit-summary').value;
-  const photoDate = document.getElementById('edit-date').value;
-  const priv      = document.getElementById('edit-private').checked;
-
-  const res = await fetch('/images', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key, location, summary, photoDate, private: priv }),
-  });
-
-  if (res.ok) {
-    editModal.hide();
-    await loadImages();
-  } else {
-    alert(t('edit.saveError'));
-  }
-});
-
-// ─── QR Code modal ───────────────────────────────────────────────────────────
-async function showQrModal() {
-  try {
-    const res  = await fetch('/qr-key');
-    const data = await res.json();
-    if (!res.ok || !data.key) {
-      alert(t('qr.keyMissing'));
-      return;
-    }
-
-    const baseUrl = window.location.origin;
-    const url     = `${baseUrl}/login-qr?key=${encodeURIComponent(data.key)}`;
-
-    document.getElementById('qr-url-input').value = url;
-
-    const canvas = document.getElementById('qr-canvas');
-    canvas.innerHTML = '';
-    new QRCode(canvas, {
-      text: url,
-      width: 220,
-      height: 220,
-      colorDark: '#1e293b',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H,
-    });
-
-    new bootstrap.Modal(document.getElementById('qrModal')).show();
-  } catch (e) {
-    alert(t('qr.fetchError') + ': ' + e.message);
-  }
-}
-
-function copyQrUrl() {
-  const input = document.getElementById('qr-url-input');
-  navigator.clipboard.writeText(input.value).then(() => {
-    const btn = input.nextElementSibling;
-    btn.textContent = t('qr.copied');
-    setTimeout(() => btn.textContent = t('qr.copy'), 2000);
-  });
-}
-
-// ─── Map modal ───────────────────────────────────────────────────────────────
-const mapModalEl = document.getElementById('mapModal');
-const mapModal   = new bootstrap.Modal(mapModalEl);
-
-let leafletMap = null;
-let leafletMarker = null;
-
-function openMapModal(lat, lng, location) {
-  const coordsLabel   = document.getElementById('map-coords-label');
-  const locationLabel = document.getElementById('map-location-label');
-  const openLink      = document.getElementById('map-open-link');
-
-  coordsLabel.textContent  = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
-  locationLabel.textContent = location || '';
-  openLink.href = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}&zoom=15`;
-
-  mapModal.show();
-
-  // Leaflet precisa ser inicializado apos o modal estar visivel
-  mapModalEl.addEventListener('shown.bs.modal', function initMap() {
-    mapModalEl.removeEventListener('shown.bs.modal', initMap);
-
-    if (leafletMap) {
-      leafletMap.remove();
-      leafletMap = null;
-    }
-
-    leafletMap = L.map('map-leaflet').setView([lat, lng], 15);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(leafletMap);
-
-    leafletMarker = L.marker([lat, lng]).addTo(leafletMap);
-    if (location) leafletMarker.bindPopup(`<b>${location}</b>`).openPopup();
-  }, { once: true });
-}
-
-mapModalEl.addEventListener('hidden.bs.modal', () => {
-  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-});
-
-// ─── Comments section builder ─────────────────────────────────────────────────
-function buildCommentsSection(imageKey, safeId) {
-  const wrapper = document.createElement('div');
-  wrapper.className = 'comments-section';
-
-  const toggle = document.createElement('button');
-  toggle.className = 'comments-toggle';
-  toggle.innerHTML = `<span>💬</span> <span id="comment-count-${safeId}">${t('comment.toggle')}</span>`;
-  wrapper.appendChild(toggle);
-
-  const container = document.createElement('div');
-  container.className = 'comments-hidden';
-  container.id = `comments-container-${safeId}`;
-
-  const list = document.createElement('div');
-  list.className = 'comments-list';
-  list.id = `comments-list-${safeId}`;
-  container.appendChild(list);
-
-  if (currentUser) {
-    const form = buildCommentForm(imageKey, safeId);
-    container.appendChild(form);
-  }
-
-  wrapper.appendChild(container);
-
-  let loaded = false;
-  let open = false;
-
-  toggle.addEventListener('click', async () => {
-    open = !open;
-    container.classList.toggle('comments-hidden', !open);
-    if (open && !loaded) {
-      loaded = true;
-      await loadComments(imageKey, safeId);
-    }
-  });
-
-  return wrapper;
-}
-
-function buildCommentForm(imageKey, safeId) {
-  const form = document.createElement('div');
-  form.className = 'comment-form';
-
-  // viewer e commenter precisam informar nome (e email opcional para viewer, obrigatorio para commenter)
-  const needsName = currentUser?.role === 'commenter' || currentUser?.role === 'viewer';
-  const isCommenter = currentUser?.role === 'commenter';
-
-  if (needsName) {
-    const anonFields = document.createElement('div');
-    anonFields.className = 'anon-fields';
-    anonFields.style.display = 'flex';
-    anonFields.style.flexDirection = 'column';
-    anonFields.innerHTML = `
-      <input type="text"  id="comment-name-${safeId}"  placeholder="${t('comment.namePlaceholder')}"  required />
-      <input type="email" id="comment-email-${safeId}" placeholder="${t('comment.emailPlaceholder')}" ${isCommenter ? 'required' : ''} />
-    `;
-    form.appendChild(anonFields);
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.rows = 2;
-  textarea.placeholder = t('comment.placeholder');
-  textarea.id = `comment-text-${safeId}`;
-  form.appendChild(textarea);
-
-  const submitBtn = document.createElement('button');
-  submitBtn.className = 'btn btn-primary btn-sm comment-submit';
-  submitBtn.textContent = t('comment.btn');
-  form.appendChild(submitBtn);
-
-  submitBtn.addEventListener('click', async () => {
-    const text = textarea.value.trim();
-    if (!text) return;
-
-    let name = null, email = null;
-    if (needsName) {
-      name  = document.getElementById(`comment-name-${safeId}`)?.value.trim();
-      email = document.getElementById(`comment-email-${safeId}`)?.value.trim();
-      // commenter: nome e email obrigatórios; viewer: só nome obrigatório
-      if (!name) { alert(t('comment.anonAlert')); return; }
-      if (isCommenter && !email) { alert(t('comment.anonAlert')); return; }
-    }
-
-    const body = { imageKey, text };
-    if (name)  body.name  = name;
-    if (email) body.email = email;
-
-    const res = await fetch('/comments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (res.ok) {
-      textarea.value = '';
-      // Atualiza contagens locais e re-renderiza a galeria para refletir novo ranking
-      commentCountsCache[imageKey] = (commentCountsCache[imageKey] || 0) + 1;
-      await loadComments(imageKey, safeId);
-      renderGallery(imagesCache);
-    } else {
-      const d = await res.json();
-      alert(d.error || t('comment.sendError'));
-    }
-  });
-
-  return form;
-}
-
-async function loadComments(imageKey, safeId) {
-  const list    = document.getElementById(`comments-list-${safeId}`);
-  const countEl = document.getElementById(`comment-count-${safeId}`);
-  if (!list) return;
-
-  list.innerHTML = `<small class="text-muted">${t('comment.loading')}</small>`;
-
-  try {
-    const res      = await fetch(`/comments?imageKey=${encodeURIComponent(imageKey)}`);
-    const comments = await res.json();
-
-    if (countEl) {
-      const count = comments.length;
-      countEl.textContent = count === 1
-        ? `1 ${t('comment.singular')}`
-        : `${count} ${t('comment.plural')}`;
-    }
-
-    if (comments.length === 0) {
-      list.innerHTML = `<small class="text-muted">${t('comment.none')}</small>`;
-      return;
-    }
-
-    const roleLabels = {
-      admin:     t('comment.roleAdmin'),
-      viewer:    t('comment.roleViewer'),
-      commenter: t('comment.roleCommenter'),
-      anonymous: t('comment.roleAnonymous'),
-    };
-
-    list.innerHTML = '';
-    comments.forEach(c => {
-      const item = document.createElement('div');
-      item.className = 'comment-item';
-
-      const roleBadgeClass = {
-        admin: 'badge-admin', viewer: 'badge-viewer',
-        commenter: 'badge-commenter', anonymous: 'badge-anonymous',
-      }[c.authorRole] || 'badge-anonymous';
-
-      const roleLabel = roleLabels[c.authorRole] || c.authorRole;
-
-      const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' }[currentLang] || 'pt-BR';
-      const date = new Date(c.createdAt).toLocaleDateString(locale, {
-        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      });
-
-      // displayName: para todos os roles mostra o nome salvo no banco
-      // Para viewer/commenter o nome vem do campo digitado; para admin/anon do username/nome
-      const displayName = escHtml(c.authorName);
-
-      item.innerHTML = `
-        <div class="comment-author">
-          ${displayName}
-          <span class="comment-role-badge ${roleBadgeClass}">${roleLabel}</span>
-        </div>
-        ${c.authorEmail ? `<div class="comment-email">${escHtml(c.authorEmail)}</div>` : ''}
-        <div class="comment-text">${escHtml(c.text)}</div>
-        <div class="comment-time">${date}</div>
-      `;
-
-      if (currentUser?.role === 'admin') {
-        const adminBtns = document.createElement('div');
-        adminBtns.style.cssText = 'display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid #f1f5f9;';
-
-        // Botao editar comentario
-        const editCBtn = document.createElement('button');
-        editCBtn.style.cssText = 'background:none;border:none;padding:0 4px;font-size:.78rem;color:#6366f1;cursor:pointer;font-weight:600;';
-        editCBtn.textContent = '✏️ Editar';
-        editCBtn.title = 'Editar';
-        editCBtn.addEventListener('click', () => {
-          const textEl = item.querySelector('.comment-text');
-          if (item.querySelector('.comment-edit-area')) return;
-          const area = document.createElement('textarea');
-          area.className = 'form-control comment-edit-area mt-2';
-          area.style.cssText = 'font-size:.85rem;border-radius:.5rem;';
-          area.rows = 3;
-          area.value = c.text;
-          const saveBtn2 = document.createElement('button');
-          saveBtn2.className = 'btn btn-primary btn-sm mt-1 me-1';
-          saveBtn2.textContent = t('comment.editSave');
-          const cancelBtn2 = document.createElement('button');
-          cancelBtn2.className = 'btn btn-outline-secondary btn-sm mt-1';
-          cancelBtn2.textContent = t('comment.editCancel');
-          textEl.style.display = 'none';
-          adminBtns.style.display = 'none';
-          item.appendChild(area);
-          item.appendChild(saveBtn2);
-          item.appendChild(cancelBtn2);
-          cancelBtn2.addEventListener('click', () => {
-            area.remove(); saveBtn2.remove(); cancelBtn2.remove();
-            textEl.style.display = '';
-            adminBtns.style.display = 'flex';
-          });
-          saveBtn2.addEventListener('click', async () => {
-            const newText = area.value.trim();
-            if (!newText) return;
-            const res = await fetch(`/comments/${c._id || c.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: newText }),
-            });
-            if (res.ok) {
-              await loadComments(imageKey, safeId);
-            } else {
-              alert('Erro ao salvar comentário.');
-              area.remove(); saveBtn2.remove(); cancelBtn2.remove();
-              textEl.style.display = '';
-              adminBtns.style.display = 'flex';
-            }
-          });
-        });
-        adminBtns.appendChild(editCBtn);
-
-        // Botao excluir comentario
-        const sep = document.createElement('span');
-        sep.style.cssText = 'color:#cbd5e1;font-size:.78rem;align-self:center;';
-        sep.textContent = '|';
-        adminBtns.appendChild(sep);
-
-        const delBtn = document.createElement('button');
-        delBtn.style.cssText = 'background:none;border:none;padding:0 4px;font-size:.78rem;color:#ef4444;cursor:pointer;font-weight:600;';
-        delBtn.textContent = '✕ Excluir';
-        delBtn.addEventListener('click', async () => {
-          if (!confirm(t('comment.deleteConfirm'))) return;
-          const delRes = await fetch(`/comments/${c._id || c.id}`, { method: 'DELETE' });
-          if (!delRes.ok) { alert('Erro ao excluir comentário.'); return; }
-          if (commentCountsCache[imageKey] > 0) commentCountsCache[imageKey]--;
-          await loadComments(imageKey, safeId);
-          renderGallery(imagesCache);
-        });
-        adminBtns.appendChild(delBtn);
-        item.appendChild(adminBtns);
-      }
-
-      list.appendChild(item);
-    });
-  } catch {
-    list.innerHTML = `<small class="text-danger">${t('comment.error')}</small>`;
-  }
-}
-
-function escHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ─── Modal ────────────────────────────────────────────────────────────────────
-function openModal(imageUrl, title) {
-  document.getElementById('modal-image').src = imageUrl;
-  document.getElementById('modal-image').alt = title;
-  document.getElementById('imageModalLabel').textContent = title;
-  imageModal.show();
-}
-imageModalEl.addEventListener('hidden.bs.modal', () => { document.getElementById('modal-image').src = ''; });
-
-// ─── EXIF helpers ─────────────────────────────────────────────────────────────
-function extractImageMetadata(url) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = 'Anonymous';
-    img.onload = () => { EXIF.getData(img, function () { const t = EXIF.getAllTags(this); resolve(Object.keys(t).length ? t : null); }); };
-    img.onerror = () => resolve(null);
-    img.src = url;
-  });
-}
-function convertDMSToDD(dms, ref) {
-  if (!dms || dms.length < 3) return null;
-  let dd = dms[0] + dms[1] / 60 + dms[2] / 3600;
-  if (ref === 'S' || ref === 'W') dd = -dd;
-  return dd.toFixed(6);
-}
-function formatExifDate(dateStr) {
-  if (!dateStr) return t('gallery.dateUnavailable');
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d)) return dateStr;
-    const locale = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' }[currentLang] || 'pt-BR';
-    return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric' });
-  } catch { return dateStr; }
-}
-
-// ─── Upload area ──────────────────────────────────────────────────────────────
-const uploadArea   = document.getElementById('upload-area');
-const fileInput    = document.getElementById('file-input');
-const preview      = document.getElementById('upload-preview');
-const placeholder  = document.getElementById('upload-placeholder');
-const previewImage = document.getElementById('preview-image');
-const removeBtn    = document.getElementById('remove-image');
-
-uploadArea.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', handleFile);
-uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
-uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-uploadArea.addEventListener('drop', e => {
-  e.preventDefault(); uploadArea.classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
-  if (file) { fileInput.files = e.dataTransfer.files; handleFile(); }
-});
-function handleFile() {
-  const file = fileInput.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => { previewImage.src = e.target.result; preview.style.display = 'flex'; placeholder.style.display = 'none'; };
-  reader.readAsDataURL(file);
-}
-removeBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.value = ''; preview.style.display = 'none'; placeholder.style.display = 'block'; });
-function resetUploadArea() {
-  fileInput.value = ''; previewImage.src = '';
-  preview.style.display = 'none'; placeholder.style.display = 'block';
-  uploadArea.classList.remove('dragover');
-}
-// Extrai GPS do arquivo original (HEIC ou JPEG) usando exifr no browser
-async function extractHeicGps(file) {
-  try {
-    const result = await exifr.gps(file);
-    console.log('exifr.gps result:', result);
-    if (result?.latitude != null && result?.longitude != null) {
-      return {
-        lat: parseFloat(result.latitude.toFixed(6)),
-        lng: parseFloat(result.longitude.toFixed(6)),
-      };
-    }
-    return null;
-  } catch (e) {
-    console.warn('Erro ao extrair GPS:', e);
-    return null;
-  }
-}
-
-async function convertHeicIfNeeded(file) {
-  if (file.type === "image/heic" || file.name.toLowerCase().endsWith(".heic")) {
-    const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-    return new File([convertedBlob], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
-  }
-  return file;
-}
-
-// ─── Event listeners ──────────────────────────────────────────────────────────
-document.getElementById('login-form').addEventListener('submit', handleLogin);
-document.getElementById('logout-btn').addEventListener('click', handleLogout);
-document.getElementById('dd-logout-link').addEventListener('click', e => { e.preventDefault(); handleLogout(); });
-document.getElementById('upload-form').addEventListener('submit', handleUpload);
-document.getElementById('new-image-btn').addEventListener('click', openUploadArea);
-document.getElementById('home-btn').addEventListener('click', goHome);
-document.getElementById('dd-login-link').addEventListener('click', e => { e.preventDefault(); openLoginArea(); });
-
-if (photoDateInput) {
-  flatpickr(photoDateInput, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: true, disableMobile: true });
-}
-
-// ─── Init ─────────────────────────────────────────────────────────────────────
-// Aplica idioma salvo antes de carregar tudo
-applyLanguage(currentLang);
-refreshAuth();
-</script>
+<script src="/js/i18n.js"></script>
+<script src="/js/app.js"></script>
 </body>
 </html>
