@@ -2,13 +2,11 @@
 // Estratégias:
 //  • Navegação (HTML): rede primeiro, com fallback para o cache (abre offline).
 //  • Estáticos próprios (/css, /js, /vendor, /icons): stale-while-revalidate (rápido e sempre atualiza).
-//  • Imagens do R2 (miniaturas/fotos): cache com limite de itens.
+//  • Fotos do R2 e outras origens: não são interceptadas.
 //  • API, login e demais rotas: nunca passam pelo cache.
 // Para forçar a atualização dos usuários após um deploy, incremente VERSION.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const STATIC_CACHE = `scrapbook-static-${VERSION}`;
-const IMAGE_CACHE = `scrapbook-images-${VERSION}`;
-const MAX_IMAGES = 120;
 
 const PRECACHE = [
   '/',
@@ -37,16 +35,10 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => ![STATIC_CACHE, IMAGE_CACHE].includes(k)).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== STATIC_CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
-
-async function trimCache(cacheName, max) {
-  const cache = await caches.open(cacheName);
-  const keys = await cache.keys();
-  if (keys.length > max) await Promise.all(keys.slice(0, keys.length - max).map(k => cache.delete(k)));
-}
 
 function staleWhileRevalidate(request, cacheName) {
   return caches.open(cacheName).then(async cache => {
@@ -78,23 +70,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Imagens do R2 (outra origem)
-  if (url.origin !== self.location.origin) {
-    if (request.destination === 'image' && url.hostname.endsWith('.r2.dev')) {
-      event.respondWith(
-        caches.open(IMAGE_CACHE).then(async cache => {
-          const cached = await cache.match(request);
-          if (cached) return cached;
-          const res = await fetch(request);
-          if (res && (res.ok || res.type === 'opaque')) {
-            cache.put(request, res.clone()).then(() => trimCache(IMAGE_CACHE, MAX_IMAGES));
-          }
-          return res;
-        })
-      );
-    }
-    return;
-  }
+  // Outras origens (fotos no R2, mapas): o navegador cuida sozinho, com o cache HTTP.
+  // Não interceptar: um fetch() daqui é barrado pela CSP (connect-src 'self') e a imagem não carrega.
+  if (url.origin !== self.location.origin) return;
 
   // Estáticos próprios
   if (STATIC_PREFIXES.some(p => url.pathname.startsWith(p)) || url.pathname === '/manifest.json') {
