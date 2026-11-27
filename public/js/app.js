@@ -432,6 +432,8 @@ function renderLightbox({ keepImage = false } = {}) {
   $('#lb-prev').hidden = $('#lb-next').hidden = lb.list.length < 2;
   $('#lb-counter').hidden = lb.list.length < 2;
 
+  if (!keepImage) lb.root.scrollTop = 0; // nova foto: volta ao topo
+
   $('#lb-date').textContent = formatDate(img.photoDate || img.uploadDate);
   $('#lb-place').textContent = place;
   $('#lb-summary').textContent = img.summary || t('gallery.noDescription');
@@ -535,10 +537,34 @@ async function loadComments(img) {
     $('#lb-comments-title').textContent = n === 0 ? t('comment.toggle') : `${n} ${n === 1 ? t('comment.singular') : t('comment.plural')}`;
     if (n === 0) { list.replaceChildren(el('small', { class: 'text-secondary', text: t('comment.none') })); return; }
     list.replaceChildren(...data.map(c => buildComment(c, img)));
-    list.scrollTop = list.scrollHeight;
   } catch {
     if (token === lb.token) list.replaceChildren(el('small', { class: 'text-danger', text: t('comment.error') }));
   }
+}
+
+// Comentários antigos não têm nota: valem 5 estrelas
+const ratingOf = c => (Number.isInteger(c.rating) && c.rating >= 1 && c.rating <= 5 ? c.rating : 5);
+
+function buildStars(rating) {
+  return el('div', { class: 'stars', role: 'img', 'aria-label': `${rating}/5` },
+    [1, 2, 3, 4, 5].map(n => icon(n <= rating ? 'star-fill' : 'star')));
+}
+
+/** Seletor de nota (1 a 5). Retorna o elemento e funções para ler/definir o valor. */
+function buildStarPicker(initial = 5) {
+  let value = initial;
+  const buttons = [1, 2, 3, 4, 5].map(n => el('button', { type: 'button', class: 'star-btn', 'aria-label': `${n}/5`, onclick: () => set(n) }));
+  function set(n) {
+    value = n;
+    buttons.forEach((b, i) => {
+      b.replaceChildren(icon(i < n ? 'star-fill' : 'star'));
+      b.setAttribute('aria-pressed', String(i + 1 === n));
+    });
+  }
+  set(value);
+  const node = el('div', { class: 'star-picker', role: 'group', 'aria-label': t('comment.rating') },
+    el('span', { class: 'star-picker-label', text: t('comment.rating') }), buttons);
+  return { node, get: () => value, set };
 }
 
 function buildComment(c, img) {
@@ -546,13 +572,14 @@ function buildComment(c, img) {
   const role = ['admin', 'viewer', 'commenter'].includes(c.authorRole) ? c.authorRole : 'anonymous';
   const textEl = el('div', { class: 'comment-text', text: c.text });
   const actions = el('div', { class: 'comment-actions' });
-  const body = el('div', { class: 'comment-body' },
+  const item = el('article', { class: 'comment' },
+    buildStars(ratingOf(c)),
+    textEl,
     el('div', { class: 'comment-head' },
       el('span', { class: 'comment-author', text: name }),
-      el('span', { class: `role-badge role-${role}`, text: roleLabel(role) })),
-    c.authorEmail ? el('div', { class: 'comment-email', text: c.authorEmail }) : null,
-    textEl,
-    el('div', { class: 'comment-time', text: formatDateTime(c.createdAt) }),
+      el('span', { class: `role-badge role-${role}`, text: roleLabel(role) }),
+      el('span', { class: 'comment-time', text: formatDateTime(c.createdAt) })),
+    isAdmin() && c.authorEmail ? el('div', { class: 'comment-email', text: c.authorEmail }) : null,
     actions);
 
   if (isAdmin()) {
@@ -566,20 +593,21 @@ function buildComment(c, img) {
         loadComments(img);
       } }));
   }
-  return el('div', { class: 'comment' }, el('div', { class: 'avatar', 'aria-hidden': 'true', text: name.charAt(0).toUpperCase() }), body);
+  return item;
 }
 
 function startEditComment(c, img, textEl, actions) {
   if (textEl.nextElementSibling?.classList.contains('comment-edit')) return;
   const area = el('textarea', { class: 'form-control form-control-sm', rows: '3', maxlength: '1000' });
   area.value = c.text;
+  const stars = buildStarPicker(ratingOf(c));
   const restore = () => { editBox.remove(); textEl.hidden = false; actions.hidden = false; };
-  const editBox = el('div', { class: 'comment-edit mt-2 d-flex flex-column gap-2' }, area,
+  const editBox = el('div', { class: 'comment-edit mt-2 d-flex flex-column gap-2' }, stars.node, area,
     el('div', { class: 'd-flex gap-2' },
       el('button', { type: 'button', class: 'btn btn-primary btn-sm px-3', text: t('comment.editSave'), onclick: async () => {
         const text = area.value.trim();
         if (!text) return;
-        const { ok } = await api(`/comments/${c._id}`, jsonBody('PATCH', { text }));
+        const { ok } = await api(`/comments/${c._id}`, jsonBody('PATCH', { text, rating: stars.get() }));
         if (ok) loadComments(img);
         else { toast(t('comment.editError'), 'error'); restore(); }
       } }),
@@ -601,11 +629,12 @@ function buildComposer(img) {
 
   const textarea = el('textarea', { class: 'form-control', rows: '2', maxlength: '1000', placeholder: t('comment.placeholder'), 'aria-label': t('comment.placeholder') });
   const send = el('button', { type: 'button', class: 'btn btn-primary btn-icon flex-none', 'aria-label': t('comment.btn') }, icon('send-fill'));
+  const stars = buildStarPicker();
 
   const submit = async () => {
     const text = textarea.value.trim();
     if (!text) return;
-    const body = { imageKey: img.key, text };
+    const body = { imageKey: img.key, text, rating: stars.get() };
     if (needsName) {
       const name = nameInput.value.trim(), email = emailInput.value.trim();
       if (!name || (needsEmail && !email)) { toast(t('comment.anonAlert'), 'error'); return; }
@@ -618,6 +647,7 @@ function buildComposer(img) {
       if (!ok) { toast(data?.error || t('comment.sendError'), 'error'); return; }
       if (needsName) { try { localStorage.setItem('commentName', body.name); localStorage.setItem('commentEmail', body.email || ''); } catch { /* ignore */ } }
       textarea.value = '';
+      stars.set(5);
       updateCommentCount(img.key, +1);
       loadComments(img);
     } finally { send.disabled = false; }
@@ -626,6 +656,7 @@ function buildComposer(img) {
   textarea.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } });
 
   return el('div', {},
+    stars.node,
     needsName ? el('div', { class: 'compose-fields' }, nameInput, emailInput) : null,
     el('div', { class: 'compose-row' }, textarea, send));
 }

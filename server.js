@@ -180,6 +180,9 @@ app.use(
   })
 );
 
+// Avaliação dos comentários: inteiro de 1 a 5
+const isRating = v => Number.isInteger(v) && v >= 1 && v <= 5;
+
 // Miniaturas ficam no mesmo bucket, sob o prefixo thumbs/
 const thumbKeyFor = key => `thumbs/${key}`;
 
@@ -390,7 +393,8 @@ app.get('/comments', ensureSignedIn, async (req, res) => {
       .find({ imageKey })
       .sort({ createdAt: 1 })
       .toArray();
-    return res.json(comments.map(({ _id, ...c }) => ({ ...c, _id: _id.toString() })));
+    // comentários anteriores às estrelas valem 5
+    return res.json(comments.map(({ _id, ...c }) => ({ ...c, rating: c.rating ?? 5, _id: _id.toString() })));
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Erro ao buscar comentários' });
@@ -435,7 +439,9 @@ app.get('/comments/counts', ensureSignedIn, async (req, res) => {
 });
 
 app.post('/comments', commentLimiter, ensureCanComment, async (req, res) => {
-  const { imageKey, text, name, email } = req.body || {};
+  const { imageKey, text, name, email, rating = 5 } = req.body || {};
+
+  if (!isRating(rating)) return res.status(400).json({ error: 'Avaliação deve ser de 1 a 5' });
 
   if (!isStr(imageKey, 300) || !isStr(text, 1000) || !imageKey || !text.trim()) {
     return res.status(400).json({ error: 'imageKey e text são obrigatórios (texto de até 1000 caracteres)' });
@@ -454,6 +460,7 @@ app.post('/comments', commentLimiter, ensureCanComment, async (req, res) => {
     const comment = {
       imageKey,
       text: text.trim(),
+      rating,
       // admin usa o próprio username; viewer e commenter usam o nome digitado no formulário
       authorName: (sessionUser?.role === 'viewer' || sessionUser?.role === 'commenter')
         ? (name || sessionUser.username)
@@ -475,13 +482,14 @@ app.post('/comments', commentLimiter, ensureCanComment, async (req, res) => {
 
 app.patch('/comments/:id', ensureAdmin, async (req, res) => {
   const { ObjectId } = require('mongodb');
-  const { text } = req.body || {};
+  const { text, rating } = req.body || {};
+  if (rating !== undefined && !isRating(rating)) return res.status(400).json({ error: 'Avaliação deve ser de 1 a 5' });
   if (!isStr(text, 1000) || !text.trim()) return res.status(400).json({ error: 'Texto obrigatorio (até 1000 caracteres)' });
   if (!ObjectId.isValid(req.params.id)) return res.status(400).json({ error: 'ID inválido' });
   try {
     const result = await commentsCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { text: text.trim(), editedAt: new Date() } }
+      { $set: { text: text.trim(), ...(rating !== undefined && { rating }), editedAt: new Date() } }
     );
     if (result.matchedCount === 0) return res.status(404).json({ error: 'Comentário não encontrado' });
     res.json({ ok: true });

@@ -17,6 +17,7 @@
   <script src="/js/theme.js"></script>
   <link rel="stylesheet" href="/vendor/fontsource/inter/index.css" />
   <link rel="stylesheet" href="/vendor/fontsource/fraunces/index.css" />
+  <link rel="stylesheet" href="/vendor/fontsource/fraunces/wght-italic.css" />
   <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/vendor/bootstrap-icons/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="/css/styles.css" />
@@ -240,27 +241,29 @@
 
 <!-- ═════════ Lightbox ═════════ -->
 <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-labelledby="lb-place" tabindex="-1">
+  <button type="button" class="lb-btn lb-close" id="lb-close" data-i18n-aria="lightbox.close" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
   <div class="lb-stage" id="lb-stage">
-    <button type="button" class="lb-btn lb-close" id="lb-close" data-i18n-aria="lightbox.close" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
     <button type="button" class="lb-btn lb-prev" id="lb-prev" data-i18n-aria="lightbox.prev" aria-label="Anterior"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
     <img id="lb-img" alt="" />
     <button type="button" class="lb-btn lb-next" id="lb-next" data-i18n-aria="lightbox.next" aria-label="Próxima"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
     <div class="lb-counter" id="lb-counter"></div>
   </div>
-  <aside class="lb-panel">
-    <div class="lb-info">
-      <div class="lb-date" id="lb-date"></div>
-      <h3 class="lb-place" id="lb-place"></h3>
-      <p class="lb-summary" id="lb-summary"></p>
-      <div class="lb-tags" id="lb-tags"></div>
-      <div class="lb-admin" id="lb-admin" hidden></div>
+  <div class="lb-panel">
+    <div class="lb-content">
+      <div class="lb-info">
+        <div class="lb-date" id="lb-date"></div>
+        <h3 class="lb-place" id="lb-place"></h3>
+        <p class="lb-summary" id="lb-summary"></p>
+        <div class="lb-tags" id="lb-tags"></div>
+        <div class="lb-admin" id="lb-admin" hidden></div>
+      </div>
+      <section class="lb-comments">
+        <h4 class="lb-comments-head" id="lb-comments-title" data-i18n="comment.toggle">Comentários</h4>
+        <div class="lb-comments-list" id="lb-comments-list"></div>
+        <div class="lb-compose" id="lb-compose"></div>
+      </section>
     </div>
-    <div class="lb-comments">
-      <div class="lb-comments-head"><i class="bi bi-chat-dots" aria-hidden="true"></i><span id="lb-comments-title" data-i18n="comment.toggle">Comentários</span></div>
-      <div class="lb-comments-list" id="lb-comments-list"></div>
-      <div class="lb-compose" id="lb-compose"></div>
-    </div>
-  </aside>
+  </div>
 </div>
 
 <!-- ═════════ Overlay de upload ═════════ -->

@@ -678,6 +678,9 @@ Object.keys(translations).forEach(lang => {
 const NAV_LANGUAGE = { pt: 'Idioma', en: 'Language', de: 'Sprache', es: 'Idioma', fr: 'Langue', it: 'Lingua' };
 Object.keys(NAV_LANGUAGE).forEach(l => { translations[l]['nav.language'] = NAV_LANGUAGE[l]; });
 
+const RATING_LABEL = { pt: 'Sua avaliação', en: 'Your rating', de: 'Deine Bewertung', es: 'Tu valoración', fr: 'Votre note', it: 'La tua valutazione' };
+Object.keys(RATING_LABEL).forEach(l => { translations[l]['comment.rating'] = RATING_LABEL[l]; });
+
 const LOCALES = { pt: 'pt-BR', en: 'en-US', de: 'de-DE', es: 'es-ES', fr: 'fr-FR', it: 'it-IT' };
 
 let currentLang = localStorage.getItem('lang') || 'pt';

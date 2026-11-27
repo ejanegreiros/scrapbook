@@ -5,7 +5,7 @@
 //  • Fotos do R2 e outras origens: não são interceptadas.
 //  • API, login e demais rotas: nunca passam pelo cache.
 // Para forçar a atualização dos usuários após um deploy, incremente VERSION.
-const VERSION = 'v3';
+const VERSION = 'v4';
 const STATIC_CACHE = `scrapbook-static-${VERSION}`;
 
 const PRECACHE = [
@@ -19,6 +19,7 @@ const PRECACHE = [
   '/vendor/bootstrap-icons/font/bootstrap-icons.min.css',
   '/vendor/fontsource/inter/index.css',
   '/vendor/fontsource/fraunces/index.css',
+  '/vendor/fontsource/fraunces/wght-italic.css',
   '/manifest.json',
 ];
 const STATIC_PREFIXES = ['/css/', '/js/', '/vendor/', '/icons/'];
